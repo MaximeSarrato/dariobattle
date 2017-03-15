@@ -1,0 +1,21 @@
+<h1 style="text-align:center">Hello<br> {{ nom }}</h1>
+
+<table>
+    <th>Joueur </th>
+    <th>Parties </th>
+    <th>Gagnées </th>
+    <th>Couleur préférée </th>
+
+    {% for elt in users %}
+        <tr>
+            <td>{{elt.login}}</td> 
+            <td>{{elt.parties}}</td> 
+            <td>{{elt.gagnees}}</td> 
+            <td><span style="width: 125px; height: 35px; display: inline-block; background-color: {{elt.couleur1}};" class="color"></span></td> 
+            <br>
+        </tr>
+    {% endfor %}
+</table>
+
+<a href="/logout">Se déconnecter</a> 
+</form>
