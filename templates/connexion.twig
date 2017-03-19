@@ -1,7 +1,9 @@
-<h1 style="text-align:center">Connexion</h1>
+<h1 style="text-align:center">Connexion à Dario Battle</h1>
+
+<p>Vous n'avez pas de compte ? <a href="/signup">S'enregistrer</a> </p> 
 
 {%if (result == "false") %}
-    <script> alert("Le login ou le mot de passe sont incorrects");</script>
+<p style="color: red;">Le login ou le mot de passe est incorrect.</p>
 {%endif%}
 
 <form action="" method="POST">

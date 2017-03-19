@@ -1,21 +1,42 @@
-<h1 style="text-align:center">Hello<br> {{ nom }}</h1>
+<h1 style="text-align:center">Bienvenue {{ nom }} !</h1>
+
+<p>Statistiques de tous les membres</p>
+<table>
+    <th>Joueur </th>
+    <th>Nombre de parties </th>
+    <th>Parties gagnées </th>
+
+    {% for elt in users %}
+            <tr>
+                <td>{{elt.login}}</td> 
+                <td>{{elt.nb_parties}}</td> 
+                <td>{{elt.nb_p_gagnees}}</td> 
+                <br>
+            </tr>
+    {% endfor %}
+</table>
+
+<p>Membres connectés</p>
 
 <table>
     <th>Joueur </th>
-    <th>Parties </th>
-    <th>Gagnées </th>
-    <th>Couleur préférée </th>
+    <th>Nombre de parties </th>
+    <th>Parties gagnées </th>
 
     {% for elt in users %}
-        <tr>
-            <td>{{elt.login}}</td> 
-            <td>{{elt.parties}}</td> 
-            <td>{{elt.gagnees}}</td> 
-            <td><span style="width: 125px; height: 35px; display: inline-block; background-color: {{elt.couleur1}};" class="color"></span></td> 
-            <br>
-        </tr>
+        {% for pseudo in connectes %}
+            {% if pseudo == elt.login %}
+            <tr>
+                <td>{{elt.login}}</td> 
+                <td>{{elt.nb_parties}}</td> 
+                <td>{{elt.nb_p_gagnees}}</td> 
+                <br>
+            </tr>
+            {% endif %}
+        {% endfor %}
     {% endfor %}
 </table>
+
 
 <a href="/logout">Se déconnecter</a> 
 </form>
