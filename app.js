@@ -10,7 +10,15 @@ var session = require('express-session');
 var express = require('express');
 var twig = require("twig");
 var bodyParser = require('body-parser');
+var ws = require('ws');
+var http = require('http');
 var app = express();
+
+const sessionStorage = session({
+    secret: '12345',
+    resave: false,
+    saveUninitialized: false
+});
 
 // On configure le dossier contenant les templates
 // et les options de Twig
@@ -18,24 +26,41 @@ app
     .set('views', 'templates')
     .set('twig options', { autoescape: true })
     .use(bodyParser.urlencoded({ extended: false }))
-    .use(session({secret: '12345', resave: false, saveUninitialized: false}));
+    .use(sessionStorage)
+    // Permet d'afficher le contenu du dossier public sans
+    // faire de gestionnaires, ne pas mettre le dossier /public/
+    // dans l'URL pour utiliser le contenu
+    .use(express.static('public'));
 
 // Objet qui va contenir les membres connectés
 var usersConnected = {};
 
+// Variables pour le hash des mots de passe
 var bcrypt = require('bcrypt');
 const saltRounds = 10;
 
 
-
+/* Gestionnaire de la page de connexion */
 app.all('/', function (req, res) {
     var hash = '';
-    var p = false;
 
     if(req.method == "GET")
         res.render('connexion.twig');
         
     else if (req.method == "POST") {
+        // Recherche si le login existe dans la BD
+        db.query('SELECT * FROM users WHERE login = ?',
+        [ req.body.login ], function(err, rows) {
+            // Si la requête fonctionne mais que le login 
+            // n'est pas trouvé dans la BD on redirige
+            // vers la page de connexion avec un msg d'erreur
+            if (!err) {
+                if (rows == "") {
+                    res.render('connexion.twig', { 'result' : "false" });
+                }
+            }
+        });
+        
         db.query('SELECT * FROM users WHERE login = ?',
         [ req.body.login ], function(err, rows) {
             // Si la requête de sélection échoue
@@ -45,11 +70,9 @@ app.all('/', function (req, res) {
             // Si le compte qui souhaite se connecter existe
             else if (rows != "") {
                 hash = rows[0].password;
-                console.log("Le mdp est : " + hash);
                 bcrypt.compare(req.body.password, hash, function (err, result) {
                     // Si la requête est bonne
                     if(!err) {
-                        console.log("hash = " + hash);
                         console.log("Résultat de la comparaison des hash = " + result);
                         // Si c'est le bon mot de passe
                         if (result == true) {
@@ -57,12 +80,13 @@ app.all('/', function (req, res) {
                             req.session.login = rows[0].login;
                             req.session.parties = rows[0].nb_parties;
                             req.session.gagnees = rows[0].nb_p_gagnees;
-                            console.log('Variables de sessions : ' + req.session.login + req.session.parties + req.session.gagnees);
-                            // Stockage de l'utilisateur et de ses données dans l'objet
-                            // userConnected
+                            // Stockage de l'utilisateur et de ses données 
+                            // dans l'objet userConnected
                             usersConnected[rows[0].login] = { 
                                 games: rows[0].nb_parties, 
-                                won: rows[0].nb_p_gagnees
+                                won: rows[0].nb_p_gagnees,
+                                statut: "LIBRE",
+                                adversaire: "NULL"
                             };
                             res.redirect('/userlist');
                             console.log(usersConnected);
@@ -143,6 +167,12 @@ app.get('/userlist', function(req, res) {
     }
 });
 
+app.all('/playdario', function(req, res) {
+   if(req.method == "GET") {
+       res.render('plateau.twig');
+   } 
+});
+
 /* Gestionnaire de déconnexion */
 app.all('/logout', function(req, res) {
     var login = req.session.login;
@@ -158,6 +188,31 @@ app.all('/logout', function(req, res) {
         res.redirect('/');
 });
 
+const server = http.createServer(app);
+const wss = new ws.Server({
+    server: server,
+    verifyClient: function(info, next) {
+        sessionStorage(info.req, {}, function(err) {
+            if (err)
+                next(err, 500, "Error :" + err);
+            else {
+                next(true);
+            }
+        });
+    }
+});
+
+
+// On définit la logique de la partie Web Socket
+wss.on('connection', function(wsconn) {
+    console.log('WS connection by', wsconn.upgradeReq.session);
+    wsconn.send('Hello world!');
+    wsconn.on('message', function(data) {
+        console.log(data);
+    });
+    // ...
+});
+
 // On lance l'application
 // (process.env.PORT est un paramètre fourni par Cloud9)
-app.listen(process.env.PORT);
+server.listen(process.env.PORT);

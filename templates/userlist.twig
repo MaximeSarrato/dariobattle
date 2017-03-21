@@ -1,5 +1,7 @@
 <h1 style="text-align:center">Bienvenue {{ nom }} !</h1>
 
+<a style="text-align:center" href="/playdario">Jouer</a>
+
 <p>Statistiques de tous les membres</p>
 <table>
     <th>Joueur </th>
@@ -37,6 +39,17 @@
     {% endfor %}
 </table>
 
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    var ws = new WebSocket('wss://' + window.location.host)
+    
+    ws.addEventListener('open', function(e) {
+        ws.send('Hi world!');
+        ws.addEventListener('message', function(e) {
+            console.log("e.data = " + e.data);
+        });
+    });
+</script>
 
 <a href="/logout">Se déconnecter</a> 
 </form>

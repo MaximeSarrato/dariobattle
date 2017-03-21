@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <title>Dario Battle</title>
+        
+        <script type="text/javascript">
+            function draw() {
+              var canvas = document.getElementById('darioScene');
+              if (canvas.getContext) {
+                var ctx = canvas.getContext('2d');
+                var background = new Image();
+                background.src = '/img/background.jpg';
+                var player1 = new Image ();
+                player1.src = '/img/mario-static-right.png';
+                
+                // Récupération des dimensions du canvas
+                const width = document.getElementById('darioScene').getAttribute("width");
+                const height = document.getElementById('darioScene').getAttribute("height");
+                
+                background.onload = function() {
+                    ctx.drawImage(background, 0, 0, width, height);
+                    // Tracé de la grille 10x10
+                    for (var i = 0; i < 10; i++) {
+                        for (var j = 0; j < 10; j++) {
+                            ctx.strokeRect(i * (width/10), j * (height/10), width/10, height/10);
+                        }
+                    }
+                }
+                
+                player1.onload = function() {
+                    ctx.drawImage(player1, 0, 480);
+                }
+                
+              }
+            }
+    </script>
+    
+    <style type="text/css">
+      canvas { border: 1px solid black; }
+    </style>
+    
+  </head>
+  <!-- Une fois le body chargé on exécute la fonction draw -->
+  <body onload="draw();">
+    <canvas id="darioScene" width="800" height="600"></canvas>
+  </body>
+</html>
