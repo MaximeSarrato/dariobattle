@@ -1,3 +1,5 @@
+'use strict'
+
 var mysql = require('mysql');
 var db    = mysql.createConnection({
   host     : process.env.IP,  // pas touche à ça : spécifique pour C9 !
@@ -6,13 +8,15 @@ var db    = mysql.createConnection({
   database : 'c9'  // mettez ici le nom de la base de données
 });
 
-var session = require('express-session');
 var express = require('express');
+var app = express();
+var server = require('http').createServer(app);
+var io = require('socket.io')(server);
+var session = require('express-session');
 var twig = require("twig");
 var bodyParser = require('body-parser');
 var ws = require('ws');
-var http = require('http');
-var app = express();
+var fs = require('fs');
 
 const sessionStorage = session({
     secret: '12345',
@@ -44,8 +48,26 @@ const saltRounds = 10;
 app.all('/', function (req, res) {
     var hash = '';
 
-    if(req.method == "GET")
-        res.render('connexion.twig');
+    if(req.method == "GET") {
+        // Si pas de session on va vers la page de connexion
+        if(!req.session.login)
+            res.render('connexion.twig');
+        // Sinon s'il y a une session on va vers l'accueil
+        else {
+            var i = 0; var connectes = [];
+            // Récupération des login des utilisateurs connectés
+            for(var elt in usersConnected) {
+                connectes[i] = elt;
+                i++;
+            }
+            db.query('SELECT * FROM users', function(err, rows) {
+            // Si la requête réussit on envoie les tuples récupérés à userlist
+            if (!err)
+                res.render('userlist.twig', { 'users' : rows, 'nom' : req.session.login, 'connectes' : connectes });
+            });
+        }
+        
+    }
         
     else if (req.method == "POST") {
         // Recherche si le login existe dans la BD
@@ -173,6 +195,19 @@ app.all('/playdario', function(req, res) {
    } 
 });
 
+app.get('/lobby', function(req, res) {
+    var i = 0; var joueursDispo = [];
+    // Récupération des login des utilisateurs connectés et disponible
+    for(var login in usersConnected) {
+        if(usersConnected[login].statut == "LIBRE") {
+            console.log('Le joueur ' + login + ' est ' + usersConnected[login].statut + ' !');
+            joueursDispo[i] = login;
+            i++;
+        }
+    }
+    res.render('lobby.twig', { 'nom' : req.session.login, 'joueursDispo' : joueursDispo });
+});
+
 /* Gestionnaire de déconnexion */
 app.all('/logout', function(req, res) {
     var login = req.session.login;
@@ -188,30 +223,18 @@ app.all('/logout', function(req, res) {
         res.redirect('/');
 });
 
-const server = http.createServer(app);
-const wss = new ws.Server({
-    server: server,
-    verifyClient: function(info, next) {
-        sessionStorage(info.req, {}, function(err) {
-            if (err)
-                next(err, 500, "Error :" + err);
-            else {
-                next(true);
-            }
-        });
-    }
-});
-
-
-// On définit la logique de la partie Web Socket
-wss.on('connection', function(wsconn) {
-    console.log('WS connection by', wsconn.upgradeReq.session);
-    wsconn.send('Hello world!');
-    wsconn.on('message', function(data) {
-        console.log(data);
+io.sockets.on('connection', function(socket) {
+    socket.on('sendPseudo', function(pseudo) {
+        console.log('Pseudo du joueur qui vient de se connecter : ' + pseudo);
+        socket.broadcast.emit('newPlayerAvailable', pseudo);
     });
-    // ...
 });
+
+
+
+
+
+
 
 // On lance l'application
 // (process.env.PORT est un paramètre fourni par Cloud9)

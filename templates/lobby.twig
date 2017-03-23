@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <title>Dario Battle : Lobby</title>
+    
+  </head>
+  <!-- Une fois le body chargé on exécute la fonction draw -->
+  <body>
+      <h1 style="text-align:center">Lobby</h1>
+      <h3>Compte : {{nom}}</h3>
+      
+      <p><h2>Joueurs en ligne</h2>
+    <table id = "onlinePlayers">
+        <th>Joueur </th>
+            {% for pseudo in joueursDispo %}
+                    <tr>
+                        <td class="nomJoueur">{{pseudo}}</td> 
+                    </tr>
+            {% endfor %}
+    </table></p>
+      <p><a id="play" href="/playdario">Lancer une partie !</a></p>
+      <p><a href="/userlist">Retour à l'accueil</a></p>
+      
+      
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // Récupération du login de l'utilisateur
+        var socket = io();
+        var zoneJoueurs = document.getElementById('onlinePlayers');
+        var cells = document.getElementsByClassName('nomJoueur');
+        
+        /* Fonction qui va être utilisée deux fois : une fois dans l'évènement
+        *  newPlayerAvailable pour pouvoir cliquer sur les joueurs qui sont
+        *  ajoutés à la volée et une autre fois pour pouvoir cliquer
+        *  sur les joueurs qui sont affichés via la boucle twig */
+        function getPseudo() {
+            console.log(this.textContent);
+        }
+        
+        // Lorsque un nouveau joueur se connecte on l'ajoute
+        // à la liste des joueurs disponible sans rafraichir la page
+        socket.on('newPlayerAvailable', function(pseudo) {
+            
+            /* Création des variables pour ajouter à la volée 
+            les nouveaux membres qui se connectent */
+            var tr = document.createElement("tr");
+            var td = document.createElement("td");
+            td.classList.add("nomJoueur");
+            var playerName = document.createTextNode(pseudo);
+            tr.appendChild(td);
+            td.appendChild(playerName);
+            zoneJoueurs.appendChild(tr);
+            
+            // Récupérer le pseudo sur lequel l'utilisateur a cliqué
+            // lorsque celui-ci vient d'être ajouté à la volée
+            var cells = zoneJoueurs.getElementsByTagName('td');
+            for(var i = 0; i < cells.length; i++) {
+                cells[i].addEventListener('click', getPseudo);
+            }
+            
+            // Envoyer au serveur Socket.IO les joueurs qui se connectent
+            socket.emit('sendPseudo', pseudo);
+        });
+        
+        
+        // Récupération du pseudo sur lequel l'utilisateur a cliqué
+        // lorsque les utilisateurs étaient déjà connectés
+        var cells = zoneJoueurs.getElementsByTagName('td');
+        for(var i = 0; i < cells.length; i++) {
+            cells[i].addEventListener('click', getPseudo);
+        }
+        
+
+    </script>
+
+      
+  </body>
+</html>
