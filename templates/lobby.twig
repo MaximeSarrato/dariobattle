@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8"/>
         <title>Dario Battle : Lobby</title>
-    
+        <link rel="stylesheet" href="css/style.css" />
   </head>
   <!-- Une fois le body chargé on exécute la fonction draw -->
   <body>
@@ -19,28 +19,79 @@
                     </tr>
             {% endfor %}
     </table></p>
+    <div id="menu"> 
+    
+    </div>
       <p><a id="play" href="/playdario">Lancer une partie !</a></p>
       <p><a href="/userlist">Retour à l'accueil</a></p>
       
       
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        // Récupération du login de l'utilisateur
+        // Connexion avec le serveur Socket.IO
         var socket = io();
+        /* Variable du cadre des joueurs disponible */
         var zoneJoueurs = document.getElementById('onlinePlayers');
-        var cells = document.getElementsByClassName('nomJoueur');
+        var players = zoneJoueurs.getElementsByTagName('td');
+        /* Variables du menu d'intéractions entre joueurs */
+        var menuInteractions = document.getElementById('menu');
+        var ul = document.createElement("ul");
+        var li = document.createElement("li");
+        var li2 = document.createElement("li");
+        li.classList.add("choixMenu"); 
+        li2.classList.add("choixMenu");
+        ul.classList.add('choixMenu');
+        var choix1 = document.createTextNode("Envoyer un message");
+        var choix2 = document.createTextNode("Inviter à jouer");
+        menuInteractions.appendChild(ul);
+        ul.appendChild(li);
+        ul.appendChild(li2);
+        li.appendChild(choix1);
+        li2.appendChild(choix2);
+        menuInteractions.style.visibility = "hidden";
+        var interactions = menuInteractions.getElementsByTagName('li');
+        
+
+        function afficheMenu() {
+            console.log("Affichage du menu");
+            menuInteractions.style.visibility = "visible";
+        }
+        
+        function hideMenu() {
+            console.log("Menu caché");
+            menuInteractions.style.visibility = "hidden";
+        }
+        
         
         /* Fonction qui va être utilisée deux fois : une fois dans l'évènement
         *  newPlayerAvailable pour pouvoir cliquer sur les joueurs qui sont
         *  ajoutés à la volée et une autre fois pour pouvoir cliquer
         *  sur les joueurs qui sont affichés via la boucle twig */
         function getPseudo() {
-            console.log(this.textContent);
+            var source = '{{nom}}'; var target = this.textContent;
+            console.log(target);
+            // On affiche le menu lorsque un clic est fait sur un joueur
+            // On notifie le serveur quel joueur a cliqué sur qui
+            socket.emit('clickOnPlayer', source, target);
+            afficheMenu();
+        }
+        
+        /* Fonction qui permet de récupérér la chaîne de caractère
+        *  qui contient l'intéraction cliquée par le joueur */
+        function getInteraction() {
+            var interaction = this.textContent;
+            console.log(interaction);
+            socket.emit('clickOnInteraction', interaction);
+            hideMenu();
         }
         
         // Lorsque un nouveau joueur se connecte on l'ajoute
         // à la liste des joueurs disponible sans rafraichir la page
         socket.on('newPlayerAvailable', function(pseudo) {
+                        
+            // Envoyer au serveur Socket.IO les joueurs qui se connectent
+            // au lobby
+            socket.emit('sendPseudo', pseudo);
             
             /* Création des variables pour ajouter à la volée 
             les nouveaux membres qui se connectent */
@@ -54,23 +105,26 @@
             
             // Récupérer le pseudo sur lequel l'utilisateur a cliqué
             // lorsque celui-ci vient d'être ajouté à la volée
-            var cells = zoneJoueurs.getElementsByTagName('td');
-            for(var i = 0; i < cells.length; i++) {
-                cells[i].addEventListener('click', getPseudo);
+            // et affichage du menu contextuel
+            for(var i = 0; i < players.length; i++) {
+                players[i].addEventListener('click', getPseudo);
             }
-            
-            // Envoyer au serveur Socket.IO les joueurs qui se connectent
-            socket.emit('sendPseudo', pseudo);
+        
+
         });
         
         
         // Récupération du pseudo sur lequel l'utilisateur a cliqué
         // lorsque les utilisateurs étaient déjà connectés
-        var cells = zoneJoueurs.getElementsByTagName('td');
-        for(var i = 0; i < cells.length; i++) {
-            cells[i].addEventListener('click', getPseudo);
+        // et affichage du menu contextuel
+        for(var i = 0; i < players.length; i++) {
+            players[i].addEventListener('click', getPseudo);
         }
         
+        // Récupération de l'intéraction sur laquelle le joueur a cliqué
+        for(i = 0; i < interactions.length; i++) {
+            interactions[i].addEventListener('click', getInteraction);
+        }
 
     </script>
 

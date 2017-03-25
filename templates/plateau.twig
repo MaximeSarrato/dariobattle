@@ -5,35 +5,123 @@
         <title>Dario Battle</title>
         
         <script type="text/javascript">
-            function draw() {
-              var canvas = document.getElementById('darioScene');
-              if (canvas.getContext) {
-                var ctx = canvas.getContext('2d');
-                var background = new Image();
-                background.src = '/img/background.jpg';
-                var player1 = new Image ();
-                player1.src = '/img/mario-static-right.png';
-                
-                // Récupération des dimensions du canvas
-                const width = document.getElementById('darioScene').getAttribute("width");
-                const height = document.getElementById('darioScene').getAttribute("height");
-                
-                background.onload = function() {
-                    ctx.drawImage(background, 0, 0, width, height);
-                    // Tracé de la grille 10x10
-                    for (var i = 0; i < 10; i++) {
-                        for (var j = 0; j < 10; j++) {
-                            ctx.strokeRect(i * (width/10), j * (height/10), width/10, height/10);
-                        }
-                    }
+        
+        var mario = new Image();
+        mario.src= "/img/mario-static-right.png";
+        //test de solution pour entrer clavier
+        (function(){
+            var requestAnimationFrame = window.mozRequestAnimationFrame    ||
+                window.webkitRequestAnimationFrame ||
+                window.msRequestAnimationFrame     ||
+                window.oRequestAnimationFrame;
+                window.requestAnimationFrame = requestAnimationFrame;
+        })();
+        
+        window.addEventListener("keydown",onKeyDown,false);
+        window.addEventListener("keyup",onKeyUp,false);
+        
+        
+        function onKeyDown(event) {
+              var keyCode = event.keyCode;
+              switch (keyCode) {
+                case 68: //d
+                keyD = true;
+                break;
+                case 83: //s
+                  keyS = true;
+                  break;
+                case 81: //q
+                  keyQ = true;
+                  break;
+                case 90: //z
+                  keyZ = true;
+                  break;
                 }
-                
-                player1.onload = function() {
-                    ctx.drawImage(player1, 0, 480);
-                }
-                
-              }
+        }
+
+        function onKeyUp(event) {
+          var keyCode = event.keyCode;
+        
+          switch (keyCode) {
+            case 68: //d
+              keyD = false;
+              break;
+            case 83: //s
+              keyS = false;
+              break;
+            case 81: //q
+              keyQ = false;
+              break;
+            case 90: //z
+              keyZ = false;
+              break;
+          }
+        }
+        
+        var keyQ = false;
+        var keyZ = false;
+        var keyS = false;
+        var keyD = false;
+        
+        var x =  0;
+        var y = 480;
+        var speed = 5;
+        
+        function animation(){
+            window.requestAnimationFrame(animation);
+            var canvas = document.getElementById("darioScene");
+            var ctx=canvas.getContext("2d");
+            var mario = new Image();
+            mario.src= "/img/mario-static-right.png";
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(mario,x,y);
+
+            if (keyD == true) {
+                x += speed;
             }
+            if (keyQ == true) {
+                console.log("q appuyé");
+                x-=speed;
+            }
+            }
+            window.requestAnimationFrame(animation);
+            
+        //juste une translation de gauche a droite et inversement
+        /*var x =  0;
+        var y = 480;
+        var speed = 5;
+
+        function animate() {
+
+        reqAnimFrame = window.mozRequestAnimationFrame    ||
+                window.webkitRequestAnimationFrame ||
+                window.msRequestAnimationFrame     ||
+                window.oRequestAnimationFrame
+                ;
+
+        reqAnimFrame(animate);
+
+         x += speed;
+
+        if(x <= 0 || x >= 700){
+        speed = -speed;
+        }
+
+        draw();
+        }
+
+
+        function draw() {
+        var canvas  = document.getElementById("darioScene");
+        var ctx = canvas.getContext("2d");
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(mario,x,y);
+        }
+
+        animate();*/
+        
+                
     </script>
     
     <style type="text/css">
@@ -42,7 +130,7 @@
     
   </head>
   <!-- Une fois le body chargé on exécute la fonction draw -->
-  <body onload="draw();">
-    <canvas id="darioScene" width="800" height="600"></canvas>
+  <body>
+   <canvas id="darioScene" width="800" height="600">
   </body>
 </html>

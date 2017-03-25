@@ -108,7 +108,8 @@ app.all('/', function (req, res) {
                                 games: rows[0].nb_parties, 
                                 won: rows[0].nb_p_gagnees,
                                 statut: "LIBRE",
-                                adversaire: "NULL"
+                                adversaire: "NULL",
+                                wsId: "NULL"
                             };
                             res.redirect('/userlist');
                             console.log(usersConnected);
@@ -223,11 +224,29 @@ app.all('/logout', function(req, res) {
         res.redirect('/');
 });
 
+/* Gestionnaires d'évènements Socket.IO */
+
+
 io.sockets.on('connection', function(socket) {
+    // Lorsque un joueur arrive sur la page d'accueil
     socket.on('sendPseudo', function(pseudo) {
-        console.log('Pseudo du joueur qui vient de se connecter : ' + pseudo);
+        // Stockage de de l'id WebSocket dans les infos du joueurs
+        usersConnected[pseudo].wsId = socket.id;
+        console.log('Connexion WebSocket de : ' + pseudo + ' dont l\'id est ' + socket.id);
+        console.log(usersConnected);
         socket.broadcast.emit('newPlayerAvailable', pseudo);
+        
     });
+    // Lorsque un joueur clique sur un joueur disponible dans le lobby
+    socket.on('clickOnPlayer', function(source, target) {
+        console.log('Un clic sur le joueur ' + target + ' a été fait par ' + source + ' !');
+            // Lorsque un joueur clique sur un joueur puis sur une intéraction
+            // dans le menu déroulant
+            socket.on('clickOnInteraction', function(interaction) {
+                console.log('Le joueur ' + source + ' souhaite ' + interaction + ' au joueur ' + target);
+            });
+    });
+    
 });
 
 

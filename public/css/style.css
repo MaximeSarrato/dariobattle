@@ -1,0 +1,13 @@
+.nomJoueur:hover {
+    color: blue;
+    cursor: pointer;
+}
+
+a:hover {
+    color: hotpink;
+}
+
+.choixMenu li:hover {
+    color: lightgrey;
+    cursor: pointer;
+}
