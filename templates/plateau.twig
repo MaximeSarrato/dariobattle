@@ -6,21 +6,28 @@
         
         <script type="text/javascript">
         
+        //liens utiles
+        //https://www.w3schools.com/graphics/game_controllers.asp
+        //https://www.w3schools.com/graphics/tryit.asp?filename=trygame_controllers_keys
+        //http://users.polytech.unice.fr/~strombon/camash/Foundation%20HTML5%20Animation%20with%20JavaScript/html5-animation-source-code/
+        //http://stackoverflow.com/questions/14389864/javascript-html5-making-a-canvas-animation-using-wasd-to-move-around-a-rectang
+        
         var mario = new Image();
         mario.src= "/img/mario-static-right.png";
         //test de solution pour entrer clavier
         (function(){
+          // prend le frame rate optimal pour chaque navigateur
             var requestAnimationFrame = window.mozRequestAnimationFrame    ||
                 window.webkitRequestAnimationFrame ||
                 window.msRequestAnimationFrame     ||
                 window.oRequestAnimationFrame;
                 window.requestAnimationFrame = requestAnimationFrame;
         })();
-        
+        //evenement pour savoir quelles touches sont utilisées
         window.addEventListener("keydown",onKeyDown,false);
         window.addEventListener("keyup",onKeyUp,false);
         
-        
+        //fonction qui indique quelle touche est enfoncée
         function onKeyDown(event) {
               var keyCode = event.keyCode;
               switch (keyCode) {
@@ -39,6 +46,7 @@
                 }
         }
 
+        //fonction pour savoir quelle touche n'est pas enfoncée
         function onKeyUp(event) {
           var keyCode = event.keyCode;
         
@@ -63,8 +71,8 @@
         var keyS = false;
         var keyD = false;
         
-        var x =  0;
-        var y = 480;
+        var x =  0;// position de base de mario en x
+        var y = 480;// position de base de mario en y
         var speed = 5;
         
         function animation(){
@@ -73,12 +81,12 @@
             var ctx=canvas.getContext("2d");
             var mario = new Image();
             mario.src= "/img/mario-static-right.png";
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(mario,x,y);
-
+            ctx.clearRect(0, 0, canvas.width, canvas.height);//on clear l'ecran a chaque fois
+            ctx.drawImage(mario,x,y);// on dessine mario
             if (keyD == true) {
-                x += speed;
+                x += speed;//on fait se déplacer mario vers la droite si la touche Q est enfoncée
             }
+            //de même mais vers la gauche
             if (keyQ == true) {
                 console.log("q appuyé");
                 x-=speed;
@@ -86,42 +94,6 @@
             }
             window.requestAnimationFrame(animation);
             
-        //juste une translation de gauche a droite et inversement
-        /*var x =  0;
-        var y = 480;
-        var speed = 5;
-
-        function animate() {
-
-        reqAnimFrame = window.mozRequestAnimationFrame    ||
-                window.webkitRequestAnimationFrame ||
-                window.msRequestAnimationFrame     ||
-                window.oRequestAnimationFrame
-                ;
-
-        reqAnimFrame(animate);
-
-         x += speed;
-
-        if(x <= 0 || x >= 700){
-        speed = -speed;
-        }
-
-        draw();
-        }
-
-
-        function draw() {
-        var canvas  = document.getElementById("darioScene");
-        var ctx = canvas.getContext("2d");
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(mario,x,y);
-        }
-
-        animate();*/
-        
-                
     </script>
     
     <style type="text/css">

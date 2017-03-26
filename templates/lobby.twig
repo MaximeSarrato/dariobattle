@@ -125,6 +125,10 @@
         for(i = 0; i < interactions.length; i++) {
             interactions[i].addEventListener('click', getInteraction);
         }
+        
+        socket.on('sendMsg', function msg() {
+           alert(msg); 
+        });
 
     </script>
 

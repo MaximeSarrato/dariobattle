@@ -224,13 +224,18 @@ app.all('/logout', function(req, res) {
         res.redirect('/');
 });
 
+/* Fonction permettant de récupérer l'id WebSocket d'un joueur */
+function getId(target) {
+    return usersConnected[target].wsId;
+}
+
 /* Gestionnaires d'évènements Socket.IO */
 
 
 io.sockets.on('connection', function(socket) {
     // Lorsque un joueur arrive sur la page d'accueil
     socket.on('sendPseudo', function(pseudo) {
-        // Stockage de de l'id WebSocket dans les infos du joueurs
+        // Stockage de de l'id WebSocket dans les infos du joueur
         usersConnected[pseudo].wsId = socket.id;
         console.log('Connexion WebSocket de : ' + pseudo + ' dont l\'id est ' + socket.id);
         console.log(usersConnected);
@@ -244,6 +249,8 @@ io.sockets.on('connection', function(socket) {
             // dans le menu déroulant
             socket.on('clickOnInteraction', function(interaction) {
                 console.log('Le joueur ' + source + ' souhaite ' + interaction + ' au joueur ' + target);
+                var wsId = getId(target);
+                socket.to(wsId).emit('sendMsg', "Coucou");
             });
     });
     
