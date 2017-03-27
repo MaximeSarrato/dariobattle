@@ -1,9 +1,9 @@
-'use strict'
+'use strict';
 
 var mysql = require('mysql');
 var db    = mysql.createConnection({
   host     : process.env.IP,  // pas touche à ça : spécifique pour C9 !
-  user     : process.env.C9_USER.substr(0,16),  // laissez comme ça
+  user     : process.env.C9_USER.substr(0,16), // laissez comme ça
   password : '',
   database : 'c9'  // mettez ici le nom de la base de données
 });
@@ -16,7 +16,6 @@ var session = require('express-session');
 var twig = require("twig");
 var bodyParser = require('body-parser');
 var ws = require('ws');
-var fs = require('fs');
 
 const sessionStorage = session({
     secret: '12345',
@@ -215,23 +214,22 @@ app.get('/lobby', function(req, res) {
     
 });
     
-    /* Gestionnaire de déconnexion */
-    app.all('/logout', function(req, res) {
-        if(req.session.login) {
-            var login = req.session.login;
-                req.session.destroy(function(err) {
-                    if(!err) {
-                        delete usersConnected[login];
-                        console.log('Session détruite');
-                        console.log(usersConnected);
-                    }    
-                });
-                res.redirect('/');
-        }
-        
-        else {
-            res.redirect('/');
-        }
+/* Gestionnaire de déconnexion */
+app.all('/logout', function(req, res) {
+    if(req.session.login) {
+        var login = req.session.login;
+        req.session.destroy(function(err) {
+            if(!err) {
+                delete usersConnected[login];
+                console.log('Session détruite');
+                console.log(usersConnected);
+            }    
+        });
+        res.redirect('/');
+    }
+    else {
+        res.redirect('/');
+    }
 });
 
 /* Fonction permettant de récupérer l'id WebSocket d'un joueur */
@@ -262,51 +260,62 @@ io.sockets.on('connection', function(socket) {
         }
         
     });
+    
     // Lorsque un joueur clique sur un joueur disponible dans le lobby
     socket.on('clickOnPlayer', function(source, target) {
         console.log('Un clic sur le joueur ' + target + ' a été fait par ' + source + ' !');
-            // Lorsque un joueur clique sur un joueur puis sur une intéraction
-            // dans le menu déroulant
-            socket.on('clickOnInteraction', function(interaction) {
-                console.log('Emetteur : ' + source + ' --- Destinataire : ' + target);
+    });
 
-                // On stocke l'id WebSocket de la cible
-                var idTarget = getId(target);
-                // console.log('Source : ' + getId(source) + ' Target : ' + idTarget);
+    // Lorsque un joueur clique sur un joueur puis sur une intéraction
+    // dans le menu déroulant
+    socket.on('clickOnInteraction', function(source, interaction, target) {
+        console.log('Emetteur : ' + source + ' --- Destinataire : ' + target);
+
+        // On stocke l'id WebSocket de la cible
+        var idTarget = getId(target);
+        console.log('Source : ' + getId(source) + ' Target : ' + idTarget);
+            
+        /* Intéraction d'envoi de message entre joueurs */
+        if (interaction === "Envoyer un message") {
+            console.log('Envoi de message');
+            // Si l'id WebSocket du joueur existe
+            if (idTarget != undefined) {
+                var message = 'Reçu de ' + source + ' : Mon putain de message';
+                // Le serveur récupère le message de la source
+                // et le transmet à son destinataire
+                socket.to(idTarget).emit('sendMsg', message);
+            }
+            else {
+                console.log('Cet utilisateur n\'est plus connecté !');
+            }
+        }
                 
-                /* Intéraction d'envoi de message entre joueurs */
-                if (interaction === "Envoyer un message") {
-                    console.log('Envoi de message');
-                    // Si l'id WebSocket du joueur existe
-                    if (idTarget != undefined) {
-                        var message = 'Reçu de ' + source + ' : Mon putain de message';
-                        // Le serveur récupère le message de la source
-                        // et le transmet à son destinataire
-                        socket.to(idTarget).emit('sendMsg', message);
-                    }
-                    else {
-                        console.log('Cet utilisateur n\'est plus connecté !');
-                    }
-                }
-                
-                /* Intéraction d'invitation à la partie entre joueurs */
-                else if (interaction === "Inviter à jouer") {
-                    console.log('Invitation à jouer');
-                    if(idTarget != undefined) {
-                        socket.to(idTarget).emit('inviteToGame', message);
-                    }
-                    else {
-                        console.log('Cet utilisateur n\'est plus connecté !');
-                    }
-                }
-                /* Si l'intéraction n'existe pas */
-                else {
-                    console.log('Le joueur ' + source + ' tente une intéraction inconnue vers ' + target);
-                }
-                
-            });
+        /* Intéraction d'invitation à la partie entre joueurs */
+        else if (interaction === "Inviter à jouer") {
+            console.log('Invitation à jouer');
+            if(idTarget != undefined) {
+                message = ' vous invite à faire une partie.';
+                socket.to(idTarget).emit('invitedToGame', source, message);
+            }
+            else {
+                console.log('Cet utilisateur n\'est plus connecté !');
+            }
+        }
+        /* Si l'intéraction n'existe pas */
+        else {
+            console.log('Le joueur ' + source + ' tente une intéraction inconnue vers ' + target);
+        }
     });
     
+    // Invitation à jouer acceptée
+    socket.on('acceptInvitation', function() {
+        console.log('Invit accepted');
+    });
+    
+    // Invitation à jouer refusée
+    socket.on('declineInvitation', function() {
+        console.log('Invit declined');
+    });
 });
 
 

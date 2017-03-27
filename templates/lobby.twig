@@ -5,7 +5,6 @@
         <title>Dario Battle : Lobby</title>
         <link rel="stylesheet" href="css/style.css" />
   </head>
-  <!-- Une fois le body chargé on exécute la fonction draw -->
   <body>
       <h1 style="text-align:center">Lobby</h1>
       <h3>Compte : {{nom}}</h3>
@@ -27,6 +26,9 @@
     <div id ="msgbox">
         <h2>Discussion</h2>
     </div>
+    <div id="gameInvitationWindow">
+        
+    </div>
       <p><a id="play" href="/playdario">Lancer une partie !</a></p>
       <p><a href="/userlist">Retour à l'accueil</a></p>
       
@@ -36,6 +38,8 @@
         // Connexion avec le serveur Socket.IO
         var socket = io();
         var playerLogin = '{{nom}}'
+        // Tableau qui aura en première case le pseudo du joueur ciblé par le clic
+        var nameTarget = [];
         /* Variable du cadre des joueurs disponible */
         var zoneJoueurs = document.getElementById('onlinePlayers');
         var players = zoneJoueurs.getElementsByTagName('td');
@@ -57,15 +61,19 @@
         li2.appendChild(choix2);
         menuInteractions.style.visibility = "hidden";
         var interactions = menuInteractions.getElementsByTagName('li');
-        
+        /* Variables de la fenêtre d'invitation à la partie */
+        var gameInvitationWindow = document.getElementById('gameInvitationWindow');
+        gameInvitationWindow.style.visibility = "hidden";
+        var buttonAccept = document.createElement('button');
+        var buttonDecline = document.createElement('button');
         
 
-        function afficheMenu() {
-            menuInteractions.style.visibility = "visible";
+        function afficheElement(element) {
+            element.style.visibility = "visible";
         }
         
-        function hideMenu() {
-            menuInteractions.style.visibility = "hidden";
+        function hideElement(element) {
+            element.style.visibility = "hidden";
         }
         
         
@@ -73,22 +81,27 @@
         *  newPlayerAvailable pour pouvoir cliquer sur les joueurs qui sont
         *  ajoutés à la volée et une autre fois pour pouvoir cliquer
         *  sur les joueurs qui sont affichés via la boucle twig */
-        function getPseudo() {
-            var source = playerLogin; var target = this.textContent;
-            console.log(target);
+        function getPseudo(target) {
+            var source = playerLogin; 
+            // On stocke le nom du joueur cliqué dans le tableau
+            nameTarget[0] = this.textContent;
+            var target = nameTarget[0];
+            console.log('Cible du clic ' + nameTarget[0]);
             // On affiche le menu lorsque un clic est fait sur un joueur
             // On notifie le serveur quel joueur a cliqué sur qui
             socket.emit('clickOnPlayer', source, target);
-            afficheMenu();
+            afficheElement(menuInteractions);
         }
         
         /* Fonction qui permet de récupérér la chaîne de caractère
         *  qui contient l'intéraction cliquée par le joueur */
         function getInteraction() {
+            var source = playerLogin;
             var interaction = this.textContent;
+            var target = nameTarget[0];
             console.log(interaction);
-            socket.emit('clickOnInteraction', interaction);
-            hideMenu();
+            socket.emit('clickOnInteraction', source, interaction, target);
+            hideElement(menuInteractions);
         }
         
         // Signale au serveur qu'un joueur vient de se connecter au lobby
@@ -150,9 +163,32 @@
             console.log('--- Message reçu --- ' + message);
         });
         
-        /* Si on est invité à jouer on affiche une alerte */
-        socket.on('inviteToGame', function() {
-            alert('Tu as été invité à jouer !');
+        /* Si on est invité à jouer on affiche la fenêtre d'invitation */
+        socket.on('invitedToGame', function(source, message) {
+            var context = document.createTextNode('Le joueur ' + source + ' ' + message);
+            var br = document.createElement('br');
+            buttonAccept.textContent = 'Accepter';
+            buttonDecline.textContent = 'Refuser';
+            gameInvitationWindow.appendChild(context);
+            gameInvitationWindow.appendChild(br);
+            gameInvitationWindow.appendChild(buttonAccept);
+            gameInvitationWindow.appendChild(buttonDecline);
+            // On affiche la fenêtre d'invitation
+            afficheElement(gameInvitationWindow);
+            // Si le joueur accepte l'invitation
+            buttonAccept.addEventListener('click', function() {
+                socket.emit('acceptInvitation', 'J\'accepte');
+                // Problème dans la console avec removeChild
+                gameInvitationWindow.removeChild(context);
+                hideElement(gameInvitationWindow);
+            })
+            // Si le joueur refuse l'invitation
+            buttonDecline.addEventListener('click', function() {
+                socket.emit('declineInvitation', 'Je veux pas jouer avec toi !');
+                // Problème dans la console avec removeChild
+                gameInvitationWindow.removeChild(context);
+                hideElement(gameInvitationWindow);
+            })
         });
 
     </script>
