@@ -11,3 +11,7 @@ a:hover {
     color: lightgrey;
     cursor: pointer;
 }
+
+#msgbox {
+    float:right;
+}

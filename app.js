@@ -95,7 +95,6 @@ app.all('/', function (req, res) {
                 bcrypt.compare(req.body.password, hash, function (err, result) {
                     // Si la requête est bonne
                     if(!err) {
-                        console.log("Résultat de la comparaison des hash = " + result);
                         // Si c'est le bon mot de passe
                         if (result == true) {
                             // Création des variables de session
@@ -197,31 +196,42 @@ app.all('/playdario', function(req, res) {
 });
 
 app.get('/lobby', function(req, res) {
-    var i = 0; var joueursDispo = [];
-    // Récupération des login des utilisateurs connectés et disponible
-    for(var login in usersConnected) {
-        if(usersConnected[login].statut == "LIBRE") {
-            console.log('Le joueur ' + login + ' est ' + usersConnected[login].statut + ' !');
-            joueursDispo[i] = login;
-            i++;
+    
+    if(req.session.login) {
+        var i = 0; var joueursDispo = [];
+        // Récupération des login des utilisateurs connectés et disponible
+        for(var login in usersConnected) {
+            if(usersConnected[login].statut == "LIBRE") {
+                joueursDispo[i] = login;
+                i++;
+            }
         }
+        res.render('lobby.twig', { 'nom' : req.session.login, 'joueursDispo' : joueursDispo });
     }
-    res.render('lobby.twig', { 'nom' : req.session.login, 'joueursDispo' : joueursDispo });
-});
-
-/* Gestionnaire de déconnexion */
-app.all('/logout', function(req, res) {
-    var login = req.session.login;
-    console.log("Login = " + login);
-        req.session.destroy(function(err) {
-            if(!err) {
-                delete usersConnected[login];
-                console.log('Session détruite');
-                console.log('usersConnected après destruction de la session');
-                console.log(usersConnected);
-            }    
-        });
+    
+    else if(!req.session.login){
         res.redirect('/');
+    }
+    
+});
+    
+    /* Gestionnaire de déconnexion */
+    app.all('/logout', function(req, res) {
+        if(req.session.login) {
+            var login = req.session.login;
+                req.session.destroy(function(err) {
+                    if(!err) {
+                        delete usersConnected[login];
+                        console.log('Session détruite');
+                        console.log(usersConnected);
+                    }    
+                });
+                res.redirect('/');
+        }
+        
+        else {
+            res.redirect('/');
+        }
 });
 
 /* Fonction permettant de récupérer l'id WebSocket d'un joueur */
@@ -233,13 +243,23 @@ function getId(target) {
 
 
 io.sockets.on('connection', function(socket) {
-    // Lorsque un joueur arrive sur la page d'accueil
-    socket.on('sendPseudo', function(pseudo) {
+    /* Détection d'erreur dans les connexions TCP */
+    socket.on('error', function() {
+      console.log('Erreur TCP');  
+    });
+    
+    // Lorsque un joueur arrive dans le lobby
+    socket.on('lobbyConnection', function(pseudo) {
         // Stockage de de l'id WebSocket dans les infos du joueur
-        usersConnected[pseudo].wsId = socket.id;
-        console.log('Connexion WebSocket de : ' + pseudo + ' dont l\'id est ' + socket.id);
-        console.log(usersConnected);
-        socket.broadcast.emit('newPlayerAvailable', pseudo);
+        if(socket.id != undefined) {
+            usersConnected[pseudo].wsId = socket.id;
+            console.log('Connexion WebSocket de : ' + pseudo + ' dont l\'id est ' + socket.id);
+            console.log(usersConnected);
+            socket.broadcast.emit('newPlayerAvailable', pseudo);
+        }
+        else {
+            console.log('Erreur, ce joueur n\'a pas de Websocket id');
+        }
         
     });
     // Lorsque un joueur clique sur un joueur disponible dans le lobby
@@ -248,9 +268,42 @@ io.sockets.on('connection', function(socket) {
             // Lorsque un joueur clique sur un joueur puis sur une intéraction
             // dans le menu déroulant
             socket.on('clickOnInteraction', function(interaction) {
-                console.log('Le joueur ' + source + ' souhaite ' + interaction + ' au joueur ' + target);
-                var wsId = getId(target);
-                socket.to(wsId).emit('sendMsg', "Coucou");
+                console.log('Emetteur : ' + source + ' --- Destinataire : ' + target);
+
+                // On stocke l'id WebSocket de la cible
+                var idTarget = getId(target);
+                // console.log('Source : ' + getId(source) + ' Target : ' + idTarget);
+                
+                /* Intéraction d'envoi de message entre joueurs */
+                if (interaction === "Envoyer un message") {
+                    console.log('Envoi de message');
+                    // Si l'id WebSocket du joueur existe
+                    if (idTarget != undefined) {
+                        var message = 'Reçu de ' + source + ' : Mon putain de message';
+                        // Le serveur récupère le message de la source
+                        // et le transmet à son destinataire
+                        socket.to(idTarget).emit('sendMsg', message);
+                    }
+                    else {
+                        console.log('Cet utilisateur n\'est plus connecté !');
+                    }
+                }
+                
+                /* Intéraction d'invitation à la partie entre joueurs */
+                else if (interaction === "Inviter à jouer") {
+                    console.log('Invitation à jouer');
+                    if(idTarget != undefined) {
+                        socket.to(idTarget).emit('inviteToGame', message);
+                    }
+                    else {
+                        console.log('Cet utilisateur n\'est plus connecté !');
+                    }
+                }
+                /* Si l'intéraction n'existe pas */
+                else {
+                    console.log('Le joueur ' + source + ' tente une intéraction inconnue vers ' + target);
+                }
+                
             });
     });
     
@@ -265,3 +318,4 @@ io.sockets.on('connection', function(socket) {
 // On lance l'application
 // (process.env.PORT est un paramètre fourni par Cloud9)
 server.listen(process.env.PORT);
+console.log('Server listening on port : ' + process.env.PORT);

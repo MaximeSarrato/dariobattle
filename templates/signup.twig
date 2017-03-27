@@ -1,7 +1,7 @@
 <h1 style="text-align:center">Dario Battle</h1>
 <h2 style="text-align:center">Création de compte</h2>
 
-{%if result == "ER_DUP_ENTRY" %}
+{%if (result == "ER_DUP_ENTRY") %}
     <script> alert("Ce login \"{{login}}\" est déjà pris !"); </script>
 {%endif%}
 

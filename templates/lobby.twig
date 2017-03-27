@@ -14,13 +14,18 @@
     <table id = "onlinePlayers">
         <th>Joueur </th>
             {% for pseudo in joueursDispo %}
+            {% if (pseudo != nom) %}
                     <tr>
                         <td class="nomJoueur">{{pseudo}}</td> 
                     </tr>
+            {% endif %}
             {% endfor %}
     </table></p>
     <div id="menu"> 
     
+    </div>
+    <div id ="msgbox">
+        <h2>Discussion</h2>
     </div>
       <p><a id="play" href="/playdario">Lancer une partie !</a></p>
       <p><a href="/userlist">Retour à l'accueil</a></p>
@@ -30,9 +35,11 @@
     <script>
         // Connexion avec le serveur Socket.IO
         var socket = io();
+        var playerLogin = '{{nom}}'
         /* Variable du cadre des joueurs disponible */
         var zoneJoueurs = document.getElementById('onlinePlayers');
         var players = zoneJoueurs.getElementsByTagName('td');
+        var addPlayer = true;
         /* Variables du menu d'intéractions entre joueurs */
         var menuInteractions = document.getElementById('menu');
         var ul = document.createElement("ul");
@@ -51,14 +58,13 @@
         menuInteractions.style.visibility = "hidden";
         var interactions = menuInteractions.getElementsByTagName('li');
         
+        
 
         function afficheMenu() {
-            console.log("Affichage du menu");
             menuInteractions.style.visibility = "visible";
         }
         
         function hideMenu() {
-            console.log("Menu caché");
             menuInteractions.style.visibility = "hidden";
         }
         
@@ -68,7 +74,7 @@
         *  ajoutés à la volée et une autre fois pour pouvoir cliquer
         *  sur les joueurs qui sont affichés via la boucle twig */
         function getPseudo() {
-            var source = '{{nom}}'; var target = this.textContent;
+            var source = playerLogin; var target = this.textContent;
             console.log(target);
             // On affiche le menu lorsque un clic est fait sur un joueur
             // On notifie le serveur quel joueur a cliqué sur qui
@@ -85,23 +91,32 @@
             hideMenu();
         }
         
+        // Signale au serveur qu'un joueur vient de se connecter au lobby
+        socket.emit('lobbyConnection', playerLogin);
+        
         // Lorsque un nouveau joueur se connecte on l'ajoute
         // à la liste des joueurs disponible sans rafraichir la page
         socket.on('newPlayerAvailable', function(pseudo) {
-                        
-            // Envoyer au serveur Socket.IO les joueurs qui se connectent
-            // au lobby
-            socket.emit('sendPseudo', pseudo);
             
-            /* Création des variables pour ajouter à la volée 
-            les nouveaux membres qui se connectent */
-            var tr = document.createElement("tr");
-            var td = document.createElement("td");
-            td.classList.add("nomJoueur");
-            var playerName = document.createTextNode(pseudo);
-            tr.appendChild(td);
-            td.appendChild(playerName);
-            zoneJoueurs.appendChild(tr);
+            // On vérifie que le joueur n'existe pas déjà dans la liste
+            for(var i = 0; i < players.length; i++) {
+                if (players[i].textContent == pseudo) {
+                    addPlayer = false;
+                }
+            }
+            
+            // Si le joueur n'est pas déjà présent dans la liste on l'ajoute
+            if (addPlayer) {
+                /* Création des variables pour ajouter à la volée 
+                les nouveaux membres qui se connectent */
+                var tr = document.createElement("tr");
+                var td = document.createElement("td");
+                td.classList.add("nomJoueur");
+                var playerName = document.createTextNode(pseudo);
+                tr.appendChild(td);
+                td.appendChild(playerName);
+                zoneJoueurs.appendChild(tr);
+            }
             
             // Récupérer le pseudo sur lequel l'utilisateur a cliqué
             // lorsque celui-ci vient d'être ajouté à la volée
@@ -110,7 +125,6 @@
                 players[i].addEventListener('click', getPseudo);
             }
         
-
         });
         
         
@@ -126,8 +140,19 @@
             interactions[i].addEventListener('click', getInteraction);
         }
         
-        socket.on('sendMsg', function msg() {
-           alert(msg); 
+        /* Si on reçoit un message on l'affiche dans la discussion */
+        socket.on('sendMsg', function (message) {
+            console.log('EVENEMENT SENDMSG');
+            var box = document.getElementById('msgbox');
+            var p = document.createElement('p');
+            box.appendChild(p);
+            p.textContent = message;
+            console.log('--- Message reçu --- ' + message);
+        });
+        
+        /* Si on est invité à jouer on affiche une alerte */
+        socket.on('inviteToGame', function() {
+            alert('Tu as été invité à jouer !');
         });
 
     </script>

@@ -38,16 +38,5 @@
         {% endfor %}
     {% endfor %}
 </table>
-
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-    // Récupération du login de l'utilisateur
-    var pseudo = "{{nom}}";
-    var socket = io();
-        
-        // Envoyer au serveur Socket.IO les joueurs qui se connectent
-        socket.emit('sendPseudo', pseudo);
-    </script>
-
 <a href="/logout">Se déconnecter</a> 
 </form>
