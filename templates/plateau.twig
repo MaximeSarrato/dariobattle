@@ -4,13 +4,32 @@
         <meta charset="utf-8"/>
         <title>Dario Battle</title>
         
+        <script src="/socket.io/socket.io.js"></script>
         <script type="text/javascript">
-        
+
         //liens utiles
         //https://www.w3schools.com/graphics/game_controllers.asp
         //https://www.w3schools.com/graphics/tryit.asp?filename=trygame_controllers_keys
         //http://users.polytech.unice.fr/~strombon/camash/Foundation%20HTML5%20Animation%20with%20JavaScript/html5-animation-source-code/
         //http://stackoverflow.com/questions/14389864/javascript-html5-making-a-canvas-animation-using-wasd-to-move-around-a-rectang
+        
+        /*****************************
+        /*****************************
+        /*****************************
+        /*****************************
+        * A METTRE DANS UN FICHIER .JS */
+        
+        var socket = io();
+        socket.emit('playerInGame');
+        socket.on('startingAnnouncement', function(message) {
+          alert(message);
+        });
+        
+        /*****************************
+        /*****************************
+        /*****************************
+        /*****************************
+        * A METTRE DANS UN FICHIER .JS */
         
         var mario = new Image();
         mario.src= "/img/mario-static-right.png";

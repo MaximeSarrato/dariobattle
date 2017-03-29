@@ -104,6 +104,10 @@
             hideElement(menuInteractions);
         }
         
+        function redirectToGame() {
+            document.location.href='/playdario';
+        }
+        
         // Signale au serveur qu'un joueur vient de se connecter au lobby
         socket.emit('lobbyConnection', playerLogin);
         
@@ -178,17 +182,36 @@
             // Si le joueur accepte l'invitation
             buttonAccept.addEventListener('click', function() {
                 socket.emit('acceptInvitation', source, playerLogin);
-                // Problème dans la console avec removeChild
-                gameInvitationWindow.removeChild(context);
                 hideElement(gameInvitationWindow);
+                /* On enlève tous les éléments ajoutés à la fenêtre
+                pour éviter les problèmes de doublons au prochain affichage */
+                while(gameInvitationWindow.firstChild) {
+                    gameInvitationWindow.removeChild(gameInvitationWindow.firstChild);
+                }
+                /* On affiche un bloc afin d'informer que le joueur 
+                va être redirigé vers la partie */
+                context = document.createTextNode('Vous allez être redirigé vers la partie dans quelques secondes');
+                gameInvitationWindow.appendChild(context);
+                afficheElement(gameInvitationWindow);
+                setTimeout(redirectToGame, 5000);
             })
             // Si le joueur refuse l'invitation
             buttonDecline.addEventListener('click', function() {
                 socket.emit('declineInvitation', source, playerLogin);
-                // Problème dans la console avec removeChild
-                gameInvitationWindow.removeChild(context);
                 hideElement(gameInvitationWindow);
+                while(gameInvitationWindow.firstChild) {
+                    gameInvitationWindow.removeChild(gameInvitationWindow.firstChild);
+                }
             })
+        });
+        
+        socket.on('invHasBeenAccepted', function(message) {
+            var context = document.createTextNode(message);
+            var redirection = document.createTextNode('Vous allez être redirigé vers la partie dans quelques secondes');
+            gameInvitationWindow.appendChild(context);
+            gameInvitationWindow.appendChild(redirection);
+            afficheElement(gameInvitationWindow);
+            setTimeout(redirectToGame, 5000);
         });
 
     </script>

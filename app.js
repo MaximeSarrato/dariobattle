@@ -4,7 +4,7 @@ var mysql = require('mysql');
 var db    = mysql.createConnection({
   host     : process.env.IP,  // pas touche à ça : spécifique pour C9 !
   user     : process.env.C9_USER.substr(0,16), // laissez comme ça
-  password : '',
+  password : '6;b9pC3d.Y[$9UJr',
   database : 'c9'  // mettez ici le nom de la base de données
 });
 
@@ -15,7 +15,6 @@ var io = require('socket.io')(server);
 var session = require('express-session');
 var twig = require("twig");
 var bodyParser = require('body-parser');
-var ws = require('ws');
 
 const sessionStorage = session({
     secret: 'M1n4$^T1r1th.',
@@ -107,7 +106,9 @@ app.all('/', function (req, res) {
                                 won: rows[0].nb_p_gagnees,
                                 statut: "LIBRE",
                                 adversaire: "NULL",
-                                wsId: "NULL"
+                                socket: 'NULL',
+                                wsId: "NULL",
+                                room: 'NULL'
                             };
                             res.redirect('/userlist');
                             console.log(usersConnected);
@@ -241,21 +242,14 @@ function getId(target) {
 
 
 io.sockets.on('connection', function(socket) {
-    // Permet de connaître les WebSocket id connectés
-    console.log(Object.keys(io.sockets.sockets));
-    for(var prop in io.sockets.sockets) {
-        console.log('Propriété ' + prop);
-    }
-    /* Détection d'erreur dans les connexions TCP */
-    socket.on('error', function() {
-      console.log('Erreur TCP');  
-    });
+    console.log('Liste des sockets : ' + Object.keys(io.sockets.sockets));
     
     // Lorsque un joueur arrive dans le lobby
     socket.on('lobbyConnection', function(pseudo) {
-        // Stockage de de l'id WebSocket dans les infos du joueur
+        // Stockage du socket et de l'id du socket dans les infos du joueur
         if(socket.id != undefined) {
             usersConnected[pseudo].wsId = socket.id;
+            usersConnected[pseudo].socket = socket;
             console.log('Connexion WebSocket de : ' + pseudo + ' dont l\'id est ' + socket.id);
             console.log(usersConnected);
             socket.broadcast.emit('newPlayerAvailable', pseudo);
@@ -314,27 +308,32 @@ io.sockets.on('connection', function(socket) {
     
     // Invitation à jouer envoyée par sender et acceptée par le receiver
     socket.on('acceptInvitation', function(sender, receiver) {
-        // Récupérer l'id via le login du receiver 
-        var receiverId = '';
-        for(var login in usersConnected) {
-            if(usersConnected[login] == receiver) {
-                console.log('Comparaison réussie');
-                receiverId = usersConnected[login].wsId;
-            }
-        }
+        // Notifier le joueur que son invitation a été acceptée
+        var message = 'Le joueur ' + receiver + ' a accepté votre invitation !';
+        socket.to(getId(sender)).emit('invHasBeenAccepted', message);
         
-        console.log('L\'id du receiver est : ' + receiverId);
-        // Récupérer le socket via l'id du receiver
+        // On fait rejoindre la salle 'game' aux deux joueurs
+        usersConnected[sender].socket.join('game', function () {
+            console.log(sender + ' a rejoint la salle \'game\'');
+        });
+        usersConnected[receiver].socket.join('game', function () {
+            console.log(receiver + ' a rejoint la salle \'game\'');
+        });  
         
-        console.log('Socket.id = ' + socket.id);
+        // On change les statuts des joueurs
+        usersConnected[sender].statut = "INGAME";
+        usersConnected[receiver].statut = "INGAME";
         console.log('Invit lancée par ' + sender + ' et acceptée par ' + receiver);
-        // socket.join('game'); socketReceiver.join('game');
-        console.log('Socket.id = ' + socket.id);
     });
     
     // Invitation à jouer refusée
     socket.on('declineInvitation', function(sender, receiver) {
         console.log('Invit lancée par ' + sender + ' et refusée par ' + receiver);
+    });
+    
+    socket.on('playerInGame', function() {
+        console.log('Des joueurs sont dans la salle');
+        socket.in('game').emit('startingAnnouncement', 'La partie va commençer !');
     });
 });
 
