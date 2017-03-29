@@ -42,7 +42,9 @@ var bcrypt = require('bcrypt');
 const saltRounds = 10;
 
 
-/* Gestionnaire de la page de connexion */
+/****************************************
+** PAGE DE CONNEXION ********************
+****************************************/
 app.all('/', function (req, res) {
     var hash = '';
 
@@ -129,7 +131,9 @@ app.all('/', function (req, res) {
 });
         
 
-
+/****************************************
+** PAGE D'ENREGISTREMENT ****************
+****************************************/
 app.all('/signup', function(req, res) {
     // Date d'inscription du compte
     var d = new Date();
@@ -164,7 +168,9 @@ app.all('/signup', function(req, res) {
     }
 });
 
-// On définit une route pour l'url /
+/****************************************
+** PAGE D'ACCUEIL ***********************
+****************************************/
 app.get('/userlist', function(req, res) {
     var i = 0; var connectes = [];
     
@@ -189,12 +195,19 @@ app.get('/userlist', function(req, res) {
     }
 });
 
+/****************************************
+** Gestionnaire de la page du jeu *******
+****************************************/
 app.all('/playdario', function(req, res) {
    if(req.method == "GET") {
        res.render('plateau.twig');
    } 
 });
 
+
+/****************************************
+** LOBBY ********************************
+****************************************/
 app.get('/lobby', function(req, res) {
     
     if(req.session.login) {
@@ -215,8 +228,9 @@ app.get('/lobby', function(req, res) {
     
 });
     
-/* Gestionnaire de déconnexion */
-app.all('/logout', function(req, res) {
+/****************************************
+** GESTIONNAIRE DE DECONNEXION **********
+****************************************/app.all('/logout', function(req, res) {
     if(req.session.login) {
         var login = req.session.login;
         req.session.destroy(function(err) {
@@ -238,9 +252,9 @@ function getId(target) {
     return usersConnected[target].wsId;
 }
 
-/* Gestionnaires d'évènements Socket.IO */
-
-
+/****************************************
+** GESTIONNAIRE SOCKET.IO ***************
+****************************************/
 io.sockets.on('connection', function(socket) {
     console.log('Liste des sockets : ' + Object.keys(io.sockets.sockets));
     

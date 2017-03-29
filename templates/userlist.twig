@@ -1,42 +1,63 @@
-<h1 style="text-align:center">Bienvenue {{ nom }} !</h1>
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <!-- NAVBAR -->
+        {% include 'menu.twig' %}
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Menu principal</title>
+        <link rel="stylesheet" href="css/lobby.css" />
+    </head>
+    
+    <body>
+        <script>
+            var currentPage = document.getElementsByClassName('home')[0];
+            currentPage = currentPage.getElementsByTagName('a')[0];
+            currentPage.classList.add('active');
+        </script>
+        <!-- Liste de tous les membres -->
+        <div class="members__block"> 
+            <p>Statistiques de tous les membres</p>
+            <table>
+                <th>Joueur </th>
+                <th>Nombre de parties </th>
+                <th>Parties gagnées </th>
+        <!--TWIG PART : Affiche tous les users de la database -->
+                {% for elt in users %}
+                    <tr>
+                        <td>{{elt.login}}</td> 
+                        <td>{{elt.nb_parties}}</td> 
+                        <td>{{elt.nb_p_gagnees}}</td> 
+                        <br>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+        
+        <!-- Liste de tous les membres connectés -->
+        <p>Membres connectés</p>
+        
+        <table>
+            <th>Joueur </th>
+            <th>Nombre de parties </th>
+            <th>Parties gagnées </th>
+        
+            {% for elt in users %}
+                {% for pseudo in connectes %}
+                    {% if pseudo == elt.login %}
+                    <tr>
+                        <td>{{elt.login}}</td> 
+                        <td>{{elt.nb_parties}}</td> 
+                        <td>{{elt.nb_p_gagnees}}</td> 
+                        <br>
+                    </tr>
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+        </table>
+        <!-- Déconnexion -->
+    </body>
+</html>
 
-<a id="lobby" style="text-align:center" href="/lobby">Jouer</a>
 
-<p>Statistiques de tous les membres</p>
-<table>
-    <th>Joueur </th>
-    <th>Nombre de parties </th>
-    <th>Parties gagnées </th>
 
-    {% for elt in users %}
-            <tr>
-                <td>{{elt.login}}</td> 
-                <td>{{elt.nb_parties}}</td> 
-                <td>{{elt.nb_p_gagnees}}</td> 
-                <br>
-            </tr>
-    {% endfor %}
-</table>
-
-<p>Membres connectés</p>
-
-<table>
-    <th>Joueur </th>
-    <th>Nombre de parties </th>
-    <th>Parties gagnées </th>
-
-    {% for elt in users %}
-        {% for pseudo in connectes %}
-            {% if pseudo == elt.login %}
-            <tr>
-                <td>{{elt.login}}</td> 
-                <td>{{elt.nb_parties}}</td> 
-                <td>{{elt.nb_p_gagnees}}</td> 
-                <br>
-            </tr>
-            {% endif %}
-        {% endfor %}
-    {% endfor %}
-</table>
-<a href="/logout">Se déconnecter</a> 
-</form>

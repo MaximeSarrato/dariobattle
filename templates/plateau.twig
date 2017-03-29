@@ -2,6 +2,8 @@
 <html>
     <head>
         <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
         <title>Dario Battle</title>
         
         <script src="/socket.io/socket.io.js"></script>
@@ -25,15 +27,17 @@
           alert(message);
         });
         
+        /* A METTRE DANS UN FICHIER .JS
+        *****************************
         /*****************************
         /*****************************
         /*****************************
-        /*****************************
-        * A METTRE DANS UN FICHIER .JS */
+        */
         
         var mario = new Image();
         mario.src= "/img/mario-static-right.png";
         
+        var jumping = false;
         var keyQ = false;
         var keyZ = false;
         var keyS = false;
@@ -43,7 +47,6 @@
         var y = 480;// position de base de mario en y
         var vx = 5;//vitesse de mario en x
         var vy = -500;//vitesse de mario en y
-        var gravity = 5;
         var K = 90;
         
         //test de solution pour entrer clavier
@@ -110,19 +113,13 @@
             //y=480;
             ctx.clearRect(0, 0, canvas.width, canvas.height);//on clear l'ecran a chaque fois
             ctx.drawImage(mario,x,y);// on dessine mario
-            if(keyZ == true)
+            if(keyZ == true || jumping==true)
             {
-              
-              y+=0.2*vy;
+              jumping=true;
+              y+=0.1*vy;
               vy+=K;
               console.log("position de y " + y);
               console.log("vitesse en  y " + vy);
-              /*if(y>465 && vy<0)
-              {
-                console.log("vy "+vy);
-              y+=vy;
-              vy+=gravity;
-              }*/
               
             }
             if(keyS == true)
@@ -139,6 +136,12 @@
                 console.log("position de x " +x);
                 x-=vx;
             }
+            if (y>480)
+            {
+              jumping=false;
+              y=480;
+              vy=-500;
+            }
             if(x== -55)//on passe a droite si on sort a gauche
             {
               x=800;
@@ -146,10 +149,6 @@
             else if(x==800)// inversement
             {
               x=-55;
-            }
-            if(y>480)
-            {
-              y=480;
             }
         }
             window.requestAnimationFrame(animation);

@@ -1,0 +1,21 @@
+table {
+    font-family: 'Verdana', 'Open Sans', 'Sans Serif';
+    font-size: 100%;
+    font-weight: 400;
+    line-height: 1.5;
+    border-collapse:collapse;
+    width:90%;
+ }
+ 
+th, td {
+ border-style: solid;
+ border-color: black;
+ border-width: 1px;
+ width:20%;
+ }
+td {
+ text-align:center;
+ }
+caption {
+ font-weight:bold
+ }

@@ -1,12 +1,48 @@
-<h1 style="text-align:center">Dario Battle</h1>
-<h2 style="text-align:center">Création de compte</h2>
-
-{%if (result == "ER_DUP_ENTRY") %}
-    <script> alert("Ce login \"{{login}}\" est déjà pris !"); </script>
-{%endif%}
-
-<form action="" method="POST">
-    Login <input type="text" name="login" required><br>
-    Mot de passe <input type="password" name="password" required><br>
-    <input type="submit" value="Envoyer">
-</form>
+<!DOCTYPE HTML>
+<html lang="fr">
+    
+    <head>
+        <meta charset="utf-8">
+        <title>Création de compte</title>
+        
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,700" rel="stylesheet">
+        <link rel="stylesheet" href="css/style.css"/>
+    </head>
+    
+    <body class="align">
+        <!-- TWIG INSTRUCTIONS BEGIN -->
+        {%if (result == "ER_DUP_ENTRY") %}
+            <script> alert("Ce login \"{{login}}\" est déjà pris !"); </script>
+        {%endif%}
+        <!-- TWIG INSTRUCTIONS END -->
+        <h1 style="text-align:center">Dario Battle</h1>
+        <h2 style="text-align:center">Création de compte</h2>
+        
+        <div class="grid">
+            <div class="form field">
+                
+                <form action="" method="POST" class="form login">
+                
+                    <div class="form__field"> 
+                        <label for="login__username"><svg class="icon"><use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#user"></use></svg><span class="hidden">Username</span></label>
+                        <input type="text" name="login" id="login__username" class="form__input" placeholder="Nom d'utilisateur" required>
+                    </div>
+                
+                    <div class="form__field">
+                         <label for="login__password"><svg class="icon"><use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#lock"></use></svg><span class="hidden">Password</span></label>
+                         <input id="login__password" type="password" name="password" class="form__input" placeholder="Mot de passe" required>
+                    </div>
+                
+                    <div class="form__field">
+                        <input type="submit" value="S'enregistrer">
+                    </div>
+                
+                </form>
+                
+            </div>
+            
+        </div>
+        
+    </body>
+</html>

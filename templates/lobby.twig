@@ -1,16 +1,13 @@
 <!DOCTYPE html>
 <html>
     <head>
+        {% include 'menu.twig' %}
         <meta charset="utf-8"/>
         <title>Dario Battle : Lobby</title>
-        <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
-      <h1 style="text-align:center">Lobby</h1>
-      <h3>Compte : {{nom}}</h3>
-      
-      <p><h2>Joueurs en ligne</h2>
-    <table id = "onlinePlayers">
+        <p><h2>Joueurs en ligne</h2>
+        <table id = "onlinePlayers">
         <th>Joueur </th>
             {% for pseudo in joueursDispo %}
             {% if (pseudo != nom) %}
@@ -32,9 +29,15 @@
       <p><a id="play" href="/playdario">Lancer une partie !</a></p>
       <p><a href="/userlist">Retour à l'accueil</a></p>
       
-      
+    
     <script src="/socket.io/socket.io.js"></script>
     <script>
+    
+        /* Change la page en page active pour le CSS */
+        var currentPage = document.getElementsByClassName('play')[0];
+        currentPage = currentPage.getElementsByTagName('a')[0];
+        currentPage.classList.add('active');
+        
         // Connexion avec le serveur Socket.IO
         var socket = io();
         var playerLogin = '{{nom}}'
