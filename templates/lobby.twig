@@ -177,14 +177,14 @@
             afficheElement(gameInvitationWindow);
             // Si le joueur accepte l'invitation
             buttonAccept.addEventListener('click', function() {
-                socket.emit('acceptInvitation', 'J\'accepte');
+                socket.emit('acceptInvitation', source, playerLogin);
                 // Problème dans la console avec removeChild
                 gameInvitationWindow.removeChild(context);
                 hideElement(gameInvitationWindow);
             })
             // Si le joueur refuse l'invitation
             buttonDecline.addEventListener('click', function() {
-                socket.emit('declineInvitation', 'Je veux pas jouer avec toi !');
+                socket.emit('declineInvitation', source, playerLogin);
                 // Problème dans la console avec removeChild
                 gameInvitationWindow.removeChild(context);
                 hideElement(gameInvitationWindow);

@@ -18,7 +18,7 @@ var bodyParser = require('body-parser');
 var ws = require('ws');
 
 const sessionStorage = session({
-    secret: '12345',
+    secret: 'M1n4$^T1r1th.',
     resave: false,
     saveUninitialized: false
 });
@@ -241,6 +241,11 @@ function getId(target) {
 
 
 io.sockets.on('connection', function(socket) {
+    // Permet de connaître les WebSocket id connectés
+    console.log(Object.keys(io.sockets.sockets));
+    for(var prop in io.sockets.sockets) {
+        console.log('Propriété ' + prop);
+    }
     /* Détection d'erreur dans les connexions TCP */
     socket.on('error', function() {
       console.log('Erreur TCP');  
@@ -307,14 +312,29 @@ io.sockets.on('connection', function(socket) {
         }
     });
     
-    // Invitation à jouer acceptée
-    socket.on('acceptInvitation', function() {
-        console.log('Invit accepted');
+    // Invitation à jouer envoyée par sender et acceptée par le receiver
+    socket.on('acceptInvitation', function(sender, receiver) {
+        // Récupérer l'id via le login du receiver 
+        var receiverId = '';
+        for(var login in usersConnected) {
+            if(usersConnected[login] == receiver) {
+                console.log('Comparaison réussie');
+                receiverId = usersConnected[login].wsId;
+            }
+        }
+        
+        console.log('L\'id du receiver est : ' + receiverId);
+        // Récupérer le socket via l'id du receiver
+        
+        console.log('Socket.id = ' + socket.id);
+        console.log('Invit lancée par ' + sender + ' et acceptée par ' + receiver);
+        // socket.join('game'); socketReceiver.join('game');
+        console.log('Socket.id = ' + socket.id);
     });
     
     // Invitation à jouer refusée
-    socket.on('declineInvitation', function() {
-        console.log('Invit declined');
+    socket.on('declineInvitation', function(sender, receiver) {
+        console.log('Invit lancée par ' + sender + ' et refusée par ' + receiver);
     });
 });
 

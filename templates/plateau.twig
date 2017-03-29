@@ -23,8 +23,9 @@
         var x =  0;// position de base de mario en x
         var y = 480;// position de base de mario en y
         var vx = 5;//vitesse de mario en x
-        var vy = -10;//vitesse de mario en y
+        var vy = -500;//vitesse de mario en y
         var gravity = 5;
+        var K = 90;
         
         //test de solution pour entrer clavier
         (function(){
@@ -92,19 +93,23 @@
             ctx.drawImage(mario,x,y);// on dessine mario
             if(keyZ == true)
             {
+              
+              y+=0.2*vy;
+              vy+=K;
               console.log("position de y " + y);
-              if(y>465 && vy<0)
+              console.log("vitesse en  y " + vy);
+              /*if(y>465 && vy<0)
               {
                 console.log("vy "+vy);
               y+=vy;
               vy+=gravity;
-              }
-              else if(y<480 && vy>-10)
-              {
-                console.log("vy "+vy);
-                y-=vy;
-                vy-=gravity;
-              }
+              }*/
+              
+            }
+            if(keyS == true)
+            
+            {
+               y-=vy;
             }
             if (keyD == true) {
                 console.log("position de x " +x);
