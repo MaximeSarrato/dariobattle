@@ -19,3 +19,58 @@ td {
 caption {
  font-weight:bold
  }
+ 
+#msgbox {
+  font-family: 'Oswald-Regular';
+  list-style: none;
+  display:block;
+  border-style:solid;
+  border-color: #B40404;
+  border-width: 5px;
+  width:auto;
+  height:auto;
+  background-color: #434a52;
+  max-width: 400px;
+  max-height: 600px;
+  word-wrap: break-word;
+  padding:5px;
+  position:fixed;
+  bottom: 0;
+  right: 0;
+  
+}
+
+#msgbox h3 {
+  text-align: justify;
+}
+
+.messages .username {
+  color:#B40404;
+  text-align:left;
+  text-transform: capitalize;
+}
+
+.messages .messageBody {
+  color: white;
+  line-height: 1.2;
+}
+
+
+.messages span {
+  line-height:1.8;
+}
+
+#promptInputMessage {
+  border: 10px solid #000;
+  bottom: 0;
+  height: 60px;
+  left: 0;
+  outline: none;
+  padding-left: 10px;
+  position: absolute;
+  right: 0;
+  width: 100%;
+}
+
+
+

@@ -3,6 +3,7 @@
     <head>
         {% include 'menu.twig' %}
         <meta charset="utf-8"/>
+        <link rel="stylesheet" href="css/lobby.css"/>
         <title>Dario Battle : Lobby</title>
   </head>
   <body>
@@ -21,7 +22,7 @@
     
     </div>
     <div id ="msgbox">
-        <h2>Discussion</h2>
+        <h3>Messages</h3>
     </div>
     <div id="gameInvitationWindow">
         
@@ -64,17 +65,23 @@
         li2.appendChild(choix2);
         menuInteractions.style.visibility = "hidden";
         var interactions = menuInteractions.getElementsByTagName('li');
+        /* Variables de l'interface pour envoyer des messages entre joueurs */
+        var prompt = document.createElement('input');
+        prompt.id = 'promptInputMessage';
+        prompt.type = 'text';
+        prompt.placeholder = "Ecrivez votre message ici...";
         /* Variables de la fenêtre d'invitation à la partie */
         var gameInvitationWindow = document.getElementById('gameInvitationWindow');
         gameInvitationWindow.style.visibility = "hidden";
         var buttonAccept = document.createElement('button');
         var buttonDecline = document.createElement('button');
         
-
+        
+        // Fonction permettant de modifier l'attribut CSS pour rendre visible un élément
         function afficheElement(element) {
             element.style.visibility = "visible";
         }
-        
+        // Fonction permettant de modifier l'attribut CSS pour cacher un élément
         function hideElement(element) {
             element.style.visibility = "hidden";
         }
@@ -105,7 +112,27 @@
             console.log(interaction);
             socket.emit('clickOnInteraction', source, interaction, target);
             hideElement(menuInteractions);
+            // Si l'utilisateur veut envoyer un message
+            if (interaction === "Envoyer un message") {
+                // On affiche le prompt
+                console.log('JE VEUX ENVOYER UN MESSAGE');
+                /* On crée le prompt */
+                afficheElement(prompt);
+                document.body.appendChild(prompt);
+            }
         }
+        
+        /* Evenement du Prompt d'envoi de message 
+           Si le joueur appuie sur la touche entrée 
+           on envoie le message et on efface le prompt */
+        prompt.addEventListener('keyup', function(e){
+            if(e.keyCode == 13) {
+                socket.emit('sendMessageFromPrompt', playerLogin, this.value, nameTarget[0]);
+                // On remet la valeur à vide
+                this.value='';
+                document.body.removeChild(prompt);
+            }
+        });
         
         function redirectToGame() {
             document.location.href='/playdario';
@@ -160,13 +187,30 @@
             interactions[i].addEventListener('click', getInteraction);
         }
         
+        /* Si le joueur veut envoyer un message à un autre joueur
+           alors on lui affiche un prompt pour qu'il puisse écrire */
+        socket.on('prompt', function(target) {
+            console.log(target);
+
+        });
+        
+  
+        
+        
         /* Si on reçoit un message on l'affiche dans la discussion */
-        socket.on('sendMsg', function (message) {
+        socket.on('sendMsg', function (source, message) {
             console.log('EVENEMENT SENDMSG');
             var box = document.getElementById('msgbox');
-            var p = document.createElement('p');
-            box.appendChild(p);
-            p.textContent = message;
+            var li = document.createElement('li');
+            var spanLogin = document.createElement('span');
+            var spanMsg = document.createElement('span');
+            box.appendChild(li);
+            li.classList.add('messages');
+            spanLogin.classList.add('username');
+            spanMsg.classList.add('messageBody');
+            spanLogin.textContent = source + ' : ';
+            spanMsg.textContent = message;
+            li.appendChild(spanLogin); li.appendChild(spanMsg);
             console.log('--- Message reçu --- ' + message);
         });
         

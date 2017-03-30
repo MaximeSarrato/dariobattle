@@ -34,20 +34,31 @@
         /*****************************
         */
         
-        var mario = new Image();
-        mario.src= "/img/mario-static-right.png";
+        /*var mario = new Image();
+        mario.src= "/img/mario-static-right.png";*/
+         var marioC = new Image();
+            marioC.src= "/img/crouch.png";
+            var marioJ = new Image();
+            marioJ.src= "/img/jump.png";
+            var marioS = new Image();
+            marioS.src= "/img/standing.png";
+            var marioR = new Image();
+            marioR.src= "/img/run.png";
         
         var jumping = false;
+        var running = false;
+        var standing = true;
+        var crouch = false;
         var keyQ = false;
         var keyZ = false;
         var keyS = false;
         var keyD = false;
         
         var x =  0;// position de base de mario en x
-        var y = 480;// position de base de mario en y
-        var vx = 5;//vitesse de mario en x
-        var vy = -500;//vitesse de mario en y
-        var K = 90;
+        var y = 545;// position de base de mario en y
+        var vx = 10;//vitesse de mario en x
+        var vy = -300;//vitesse de mario en y
+        const K = 20;
         
         //test de solution pour entrer clavier
         (function(){
@@ -106,49 +117,86 @@
         
         function animation(){
             window.requestAnimationFrame(animation);
+           
             var canvas = document.getElementById("darioScene");
             var ctx=canvas.getContext("2d");
-            var mario = new Image();
-            mario.src= "/img/mario-static-right.png";
-            //y=480;
+           
+           
             ctx.clearRect(0, 0, canvas.width, canvas.height);//on clear l'ecran a chaque fois
-            ctx.drawImage(mario,x,y);// on dessine mario
-            if(keyZ == true || jumping==true)
+            
+            if(running==true && keyD == true && jumping==false){
+              ctx.drawImage(marioR,x,y);// on dessine mario
+            }
+            else if(running==true && keyQ == true && jumping==false){
+              //ctx.translate(canvas.width,0);
+              //ctx.scale(1,1);
+              ctx.drawImage(marioR,x,y);// on dessine mario
+            }
+            else if (jumping==true){
+              ctx.drawImage(marioJ,x,y);// on dessine mario
+            }
+            else if(standing==true)
             {
+              ctx.drawImage(marioS,x,y);// on dessine mario
+            }
+            else if(crouch==true)
+            {
+              ctx.drawImage(marioC,x+15,y+15);
+            }
+            
+            if(keyZ == true || jumping==true )
+            {
+              crouch=false;
               jumping=true;
-              y+=0.1*vy;
+              standing= false;
+              y+=0.08*vy;
               vy+=K;
               console.log("position de y " + y);
               console.log("vitesse en  y " + vy);
               
             }
-            if(keyS == true)
+            if(keyS == true && y == 545)
             
             {
-               y-=vy;
+              running=false;
+              standing= false;
+              jumping=false;
+              crouch=true;
             }
-            if (keyD == true) {
+            if (keyD == true && keyS == false) {
+                crouch=false;
+                standing= false;
+                running=true;
                 console.log("position de x " +x);
+                console.log("position de y " + y);
                 x += vx;//on fait se déplacer mario vers la droite si la touche Q est enfoncée
             }
+            if (keyD == false && keyQ == false && keyS == false) {
+              crouch=false;
+              standing= true;
+              running=false;
+            }
             //de même mais vers la gauche
-            if (keyQ == true) {
+            if (keyQ == true && keyS == false) {
                 console.log("position de x " +x);
+                standing= false;
+                running=true;
+                crouch=false;
                 x-=vx;
             }
-            if (y>480)
+            if (y>545)
             {
               jumping=false;
-              y=480;
-              vy=-500;
+              y=545;
+              vy=-300;
             }
-            if(x== -55)//on passe a droite si on sort a gauche
+            if(x< -65)//on passe a droite si on sort a gauche
             {
-              x=800;
+              x=810;
             }
-            else if(x==800)// inversement
+            else if(x>810)// inversement
             {
-              x=-55;
+              x=-65;
             }
         }
             window.requestAnimationFrame(animation);
@@ -162,6 +210,6 @@
   </head>
   <!-- Une fois le body chargé on exécute la fonction draw -->
   <body>
-   <canvas id="darioScene" width="800" height="600">
+   <canvas id="darioScene" width="800" height="600" style="background: url(/img/background.jpg) no-repeat center center;">
   </body>
 </html>

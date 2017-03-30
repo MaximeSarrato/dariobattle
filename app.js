@@ -110,7 +110,7 @@ app.all('/', function (req, res) {
                                 adversaire: "NULL",
                                 socket: 'NULL',
                                 wsId: "NULL",
-                                room: 'NULL'
+                                room: "NULL"
                             };
                             res.redirect('/userlist');
                             console.log(usersConnected);
@@ -179,7 +179,7 @@ app.get('/userlist', function(req, res) {
     if(!req.session.login) {
         res.redirect('/');
     }
-    
+    /* Sinon s'il est connecté il peut accéder à la page */
     else {
         // Récupération des login des utilisateurs connectés
         for(var elt in usersConnected) {
@@ -230,7 +230,8 @@ app.get('/lobby', function(req, res) {
     
 /****************************************
 ** GESTIONNAIRE DE DECONNEXION **********
-****************************************/app.all('/logout', function(req, res) {
+****************************************/
+app.all('/logout', function(req, res) {
     if(req.session.login) {
         var login = req.session.login;
         req.session.destroy(function(err) {
@@ -278,25 +279,20 @@ io.sockets.on('connection', function(socket) {
     socket.on('clickOnPlayer', function(source, target) {
         console.log('Un clic sur le joueur ' + target + ' a été fait par ' + source + ' !');
     });
-
+var i = 0;
     // Lorsque un joueur clique sur un joueur puis sur une intéraction
     // dans le menu déroulant
     socket.on('clickOnInteraction', function(source, interaction, target) {
-        console.log('Emetteur : ' + source + ' --- Destinataire : ' + target);
-
+        
         // On stocke l'id WebSocket de la cible
         var idTarget = getId(target);
         console.log('Source : ' + getId(source) + ' Target : ' + idTarget);
-            
+        
         /* Intéraction d'envoi de message entre joueurs */
         if (interaction === "Envoyer un message") {
-            console.log('Envoi de message');
             // Si l'id WebSocket du joueur existe
             if (idTarget != undefined) {
-                var message = 'Reçu de ' + source + ' : Mon putain de message';
-                // Le serveur récupère le message de la source
-                // et le transmet à son destinataire
-                socket.to(idTarget).emit('sendMsg', message);
+                console.log('Envoi de message');
             }
             else {
                 console.log('Cet utilisateur n\'est plus connecté !');
@@ -306,18 +302,26 @@ io.sockets.on('connection', function(socket) {
         /* Intéraction d'invitation à la partie entre joueurs */
         else if (interaction === "Inviter à jouer") {
             console.log('Invitation à jouer');
+            
             if(idTarget != undefined) {
-                message = ' vous invite à faire une partie.';
+                var message = ' vous invite à faire une partie.';
                 socket.to(idTarget).emit('invitedToGame', source, message);
             }
+            
             else {
                 console.log('Cet utilisateur n\'est plus connecté !');
             }
         }
+        
         /* Si l'intéraction n'existe pas */
         else {
             console.log('Le joueur ' + source + ' tente une intéraction inconnue vers ' + target);
         }
+    });
+    
+    // On envoie à la cible le message écrit dans le prompt 
+    socket.on('sendMessageFromPrompt', function(source, message, target) {
+            socket.to(getId(target)).emit('sendMsg', source, message);
     });
     
     // Invitation à jouer envoyée par sender et acceptée par le receiver
@@ -347,6 +351,7 @@ io.sockets.on('connection', function(socket) {
     
     socket.on('playerInGame', function() {
         console.log('Des joueurs sont dans la salle');
+        /* A voir si ça fonctionne --> TO IMPROVE B */
         socket.in('game').emit('startingAnnouncement', 'La partie va commençer !');
     });
 });
