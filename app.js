@@ -37,6 +37,9 @@ app
 // Objet qui va contenir les membres connectés
 var usersConnected = {};
 
+// Tableau qui va contenir les salles 
+var rooms = [];
+
 // Variables pour le hash des mots de passe
 var bcrypt = require('bcrypt');
 const saltRounds = 10;
@@ -108,9 +111,10 @@ app.all('/', function (req, res) {
                                 won: rows[0].nb_p_gagnees,
                                 statut: "LIBRE",
                                 adversaire: "NULL",
+                                gameSocket: 'NULL',
                                 socket: 'NULL',
                                 wsId: "NULL",
-                                room: "NULL"
+                                room: "NULL",
                             };
                             res.redirect('/userlist');
                             console.log(usersConnected);
@@ -199,8 +203,16 @@ app.get('/userlist', function(req, res) {
 ** Gestionnaire de la page du jeu *******
 ****************************************/
 app.all('/playdario', function(req, res) {
-   if(req.method == "GET") {
-       res.render('plateau.twig');
+    if(req.method == "GET") {
+        /*
+        if(req.session.login) {
+            res.render('plateau.twig', { 'nom' : req.session.login });
+        }
+        else {
+            res.redirect('/');
+        }
+        */
+        res.render('plateau.twig');
    } 
 });
 
@@ -257,8 +269,6 @@ function getId(target) {
 ** GESTIONNAIRE SOCKET.IO ***************
 ****************************************/
 io.sockets.on('connection', function(socket) {
-    console.log('Liste des sockets : ' + Object.keys(io.sockets.sockets));
-    
     // Lorsque un joueur arrive dans le lobby
     socket.on('lobbyConnection', function(pseudo) {
         // Stockage du socket et de l'id du socket dans les infos du joueur
@@ -279,7 +289,7 @@ io.sockets.on('connection', function(socket) {
     socket.on('clickOnPlayer', function(source, target) {
         console.log('Un clic sur le joueur ' + target + ' a été fait par ' + source + ' !');
     });
-var i = 0;
+    
     // Lorsque un joueur clique sur un joueur puis sur une intéraction
     // dans le menu déroulant
     socket.on('clickOnInteraction', function(source, interaction, target) {
@@ -329,15 +339,6 @@ var i = 0;
         // Notifier le joueur que son invitation a été acceptée
         var message = 'Le joueur ' + receiver + ' a accepté votre invitation !';
         socket.to(getId(sender)).emit('invHasBeenAccepted', message);
-        
-        // On fait rejoindre la salle 'game' aux deux joueurs
-        usersConnected[sender].socket.join('game', function () {
-            console.log(sender + ' a rejoint la salle \'game\'');
-        });
-        usersConnected[receiver].socket.join('game', function () {
-            console.log(receiver + ' a rejoint la salle \'game\'');
-        });  
-        
         // On change les statuts des joueurs
         usersConnected[sender].statut = "INGAME";
         usersConnected[receiver].statut = "INGAME";
@@ -349,14 +350,23 @@ var i = 0;
         console.log('Invit lancée par ' + sender + ' et refusée par ' + receiver);
     });
     
-    socket.on('playerInGame', function() {
-        console.log('Des joueurs sont dans la salle');
-        /* A voir si ça fonctionne --> TO IMPROVE B */
-        socket.in('game').emit('startingAnnouncement', 'La partie va commençer !');
+    // Quand le joueur arrive dans la partie Dario Battle
+    socket.on('playerInGame', function(playerName) {
+        // Bug : besoin de join deux fois la salle pour pouvoir y être sans refresh
+        // la page
+        usersConnected[playerName].socket.join('gameRoom1');
+    });
+    
+    // Le joueur demande une salle pour jouer
+    socket.on('needRoom', function(playerName) {
+        // Bug : besoin de join deux fois la salle pour 
+        // pouvoir y être sans refresh la page
+        usersConnected[playerName].socket.join('gameRoom1');
+        console.log('Rooms de ' + playerName + ' = ' + Object.keys(usersConnected[playerName].socket.rooms));
+        // Ce emit devrait être un emit vers la room mais fonctionne pas
+        socket.emit('roomHasBeenJoined', 'Tu as rejoint la salle !');
     });
 });
-
-
 
 
 

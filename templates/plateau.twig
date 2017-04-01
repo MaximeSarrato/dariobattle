@@ -20,12 +20,17 @@
         /*****************************
         /*****************************
         * A METTRE DANS UN FICHIER .JS */
-        
-        var socket = io();
-        socket.emit('playerInGame');
-        socket.on('startingAnnouncement', function(message) {
+        /*
+        var socket = io.connect();
+        // Le joueur signale au serveur qu'il arrive sur la page 
+        socket.emit('playerInGame', '{{nom}}'); 
+        // Le joueur demande une salle pour la partie
+        socket.emit('needRoom', '{{nom}}');
+        // Le serveur signale au joueur qu'il est bien dans la salle
+        socket.on("roomHasBeenJoined", function(message) {
           alert(message);
         });
+        */
         
         /* A METTRE DANS UN FICHIER .JS
         *****************************
@@ -34,21 +39,35 @@
         /*****************************
         */
         
+        /* Constructeur de l'objet player */
+        function Player(x, y, speedX, speedY, state) {
+          this.x = x;
+          this.y = y;
+          this.speedX = speedX;
+          this.speedY = speedY;
+          this.state = state;
+          this.image = new Image();
+          this.image.src = "/img/standing.png";
+        }
+        
+        
         /*var mario = new Image();
         mario.src= "/img/mario-static-right.png";*/
          var marioC = new Image();
-            marioC.src= "/img/crouch.png";
+            marioC.src = "/img/crouch.png";
             var marioJ = new Image();
-            marioJ.src= "/img/jump.png";
+            marioJ.src = "/img/jump.png";
             var marioS = new Image();
-            marioS.src= "/img/standing.png";
+            marioS.src = "/img/standing.png";
             var marioR = new Image();
-            marioR.src= "/img/run.png";
+            marioR.src = "/img/run.png";
         
         var jumping = false;
         var running = false;
         var standing = true;
+        var goDown = false;
         var crouch = false;
+        var slide = false;
         var keyQ = false;
         var keyZ = false;
         var keyS = false;
@@ -56,6 +75,8 @@
         
         var x =  0;// position de base de mario en x
         var y = 545;// position de base de mario en y
+        var x2 = 500;
+        var y2 = 545;
         var vx = 10;//vitesse de mario en x
         var vy = -300;//vitesse de mario en y
         const K = 20;
@@ -113,72 +134,84 @@
           }
         }
         
+        var player1 = new Player(300, 545, 10, -300, standing);
+
         
-        
-        function animation(){
-            window.requestAnimationFrame(animation);
-           
-            var canvas = document.getElementById("darioScene");
-            var ctx=canvas.getContext("2d");
-           
-           
-            ctx.clearRect(0, 0, canvas.width, canvas.height);//on clear l'ecran a chaque fois
+        function animation() {
+          /* Notifie le navigateur que l'on veut exécuter une animation
+             l'animation va être refresh en fonction des Hz de l'écran */
+          window.requestAnimationFrame(animation);
+          
+          // Scène de Dario Battle 
+          var canvas = document.getElementById("darioScene");
+          // La variable ctx contient l'endroit où on va dessiner.
+          var ctx = canvas.getContext("2d");
+          
+          // On clear toute la scène de jeu à chaque rafraichissement d'écran 
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            if(running==true && keyD == true && jumping==false){
+          // On dessine le joueur 1
+          ctx.drawImage(player1.image, player1.x, player1.y);
+          
+          // Dessin de l'image statique du joueur 2 pour test
+          ctx.drawImage(marioS,x2,y2);
+            
+          if(running && keyD && !jumping){
               ctx.drawImage(marioR,x,y);// on dessine mario
-            }
-            else if(running==true && keyQ == true && jumping==false){
+          }
+            else if(running && keyQ && !jumping){
               //ctx.translate(canvas.width,0);
               //ctx.scale(1,1);
               ctx.drawImage(marioR,x,y);// on dessine mario
             }
-            else if (jumping==true){
+            else if (jumping || goDown ){
               ctx.drawImage(marioJ,x,y);// on dessine mario
             }
-            else if(standing==true)
+            else if(standing)
             {
               ctx.drawImage(marioS,x,y);// on dessine mario
             }
-            else if(crouch==true)
+            else if(crouch)
             {
               ctx.drawImage(marioC,x+15,y+15);
             }
             
-            if(keyZ == true || jumping==true )
+            if(keyZ || jumping || goDown)
             {
               crouch=false;
               jumping=true;
               standing= false;
               y+=0.08*vy;
               vy+=K;
-              console.log("position de y " + y);
-              console.log("vitesse en  y " + vy);
+              if(vy>0)
+              {
+                jumping=false;
+                goDown=true;
+              }
               
             }
-            if(keyS == true && y == 545)
+            if(keyS && y == 545)
             
             {
               running=false;
               standing= false;
               jumping=false;
+              goDown=false;
               crouch=true;
             }
-            if (keyD == true && keyS == false) {
+            if (keyD && !keyS) {
                 crouch=false;
                 standing= false;
                 running=true;
-                console.log("position de x " +x);
-                console.log("position de y " + y);
                 x += vx;//on fait se déplacer mario vers la droite si la touche Q est enfoncée
             }
-            if (keyD == false && keyQ == false && keyS == false) {
+            if (!keyD && !keyQ && !keyS) {
               crouch=false;
               standing= true;
               running=false;
             }
             //de même mais vers la gauche
-            if (keyQ == true && keyS == false) {
-                console.log("position de x " +x);
+            if (keyQ && !keyS) {
                 standing= false;
                 running=true;
                 crouch=false;
@@ -187,6 +220,7 @@
             if (y>545)
             {
               jumping=false;
+              goDown=false;
               y=545;
               vy=-300;
             }
@@ -198,6 +232,33 @@
             {
               x=-65;
             }
+            /* Mario accroupit et glisse vers droite */
+            if(keyS && keyD) {
+              crouch = true;
+              slide = true;
+              x+=vx;
+            }
+            /* Mario accroupit et glisse vers gauche */
+            else if(keyS && keyQ) {
+              crouch = true;
+              slide = true;
+              if(slide == true) {
+                x-=vx;
+              }
+            }
+            // collision de base (grace a la distance)
+            var dx = x - x2;
+            var dy = y - y2;
+            dx = Math.sqrt(dx*dx);
+            dy = Math.sqrt(dy*dy);
+            
+            if (goDown && dx<25)
+            {
+              if(dy==46.39999999999998)
+              console.log("mario a tué le pnj");
+            }
+            
+            
         }
             window.requestAnimationFrame(animation);
             
