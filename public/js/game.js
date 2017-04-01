@@ -1,21 +1,16 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8"/>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        {% include 'menu.twig' %}
-        <title>Dario Battle</title>
-        <script src="/socket.io/socket.io.js"></script>
-        <script type="text/javascript">
 
-        //liens utiles
+         //liens utiles
         //https://www.w3schools.com/graphics/game_controllers.asp
         //https://www.w3schools.com/graphics/tryit.asp?filename=trygame_controllers_keys
         //http://users.polytech.unice.fr/~strombon/camash/Foundation%20HTML5%20Animation%20with%20JavaScript/html5-animation-source-code/
         //http://stackoverflow.com/questions/14389864/javascript-html5-making-a-canvas-animation-using-wasd-to-move-around-a-rectang
         
-        /* Socket.IO */
-        var socket = io.connect();
+        /*****************************
+        /*****************************
+        /*****************************
+        /*****************************
+        * A METTRE DANS UN FICHIER .JS */
+
         // Le joueur signale au serveur qu'il arrive sur la page 
         socket.emit('playerInGame', '{{nom}}'); 
         // Le joueur demande une salle pour la partie
@@ -24,6 +19,14 @@
         socket.on("roomHasBeenJoined", function(message) {
           console.log(message);
         });
+        
+        
+        /* A METTRE DANS UN FICHIER .JS
+        *****************************
+        /*****************************
+        /*****************************
+        /*****************************
+        */
         
         /* Constructeur de l'objet Player */
         
@@ -51,17 +54,16 @@
         }
        
         
-        /* L'objet player du joueur adverse, ses propriétés seront définies
-           dans le listener enemyIsHere de socket.io */
+        // Objet player2 qui prendra les valeurs envoyées du joueur adverse au serveur
         var player2 = {};
         
-        // On met à faux les différentes touches de jeu
+        
         var keyQ = false;
         var keyZ = false;
         var keyS = false;
         var keyD = false;
         
-        // Constante permettant de réduire la vitesse pour la retombée du saut
+        // Constante pour le saut
         const K = 20;
         
         //test de solution pour entrer clavier
@@ -278,16 +280,3 @@
             
         }
         window.requestAnimationFrame(animation);
-        </script>
-        
-    
-    <style type="text/css">
-      canvas { border: 1px solid black; }
-    </style>
-    
-  </head>
-  <!-- Une fois le body chargé on exécute la fonction draw -->
-  <body>
-   <canvas id="darioScene" width="800" height="600" style="background: url(/img/background.jpg) no-repeat center center;">
-  </body>
-</html>

@@ -204,15 +204,13 @@ app.get('/userlist', function(req, res) {
 ****************************************/
 app.all('/playdario', function(req, res) {
     if(req.method == "GET") {
-        /*
+        
         if(req.session.login) {
             res.render('plateau.twig', { 'nom' : req.session.login });
         }
         else {
             res.redirect('/');
         }
-        */
-        res.render('plateau.twig');
    } 
 });
 
@@ -362,9 +360,18 @@ io.sockets.on('connection', function(socket) {
         // Bug : besoin de join deux fois la salle pour 
         // pouvoir y être sans refresh la page
         usersConnected[playerName].socket.join('gameRoom1');
+        usersConnected[playerName].room = 'gameRoom1';
         console.log('Rooms de ' + playerName + ' = ' + Object.keys(usersConnected[playerName].socket.rooms));
         // Ce emit devrait être un emit vers la room mais fonctionne pas
         socket.emit('roomHasBeenJoined', 'Tu as rejoint la salle !');
+    });
+    
+    socket.on('playerMoved', function(player, playerName) {
+        for(var adversaire in usersConnected) {
+            if(usersConnected[adversaire].room == 'gameRoom1' && adversaire != playerName) {
+                socket.broadcast.emit('enemyIsHere', player);
+            }
+        }
     });
 });
 
