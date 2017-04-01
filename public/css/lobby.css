@@ -72,5 +72,12 @@ caption {
   width: 100%;
 }
 
+#darioScene {
+    margin: auto;
+    padding: 0;
+    display: block;
+    background: url(/img/background.jpg) no-repeat center center;
+}
+
 
 

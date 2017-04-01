@@ -366,6 +366,7 @@ io.sockets.on('connection', function(socket) {
         socket.emit('roomHasBeenJoined', 'Tu as rejoint la salle !');
     });
     
+    // Dés qu'un joueur bouge on envoie ses positions à l'autre joueur
     socket.on('playerMoved', function(player, playerName) {
         for(var adversaire in usersConnected) {
             if(usersConnected[adversaire].room == 'gameRoom1' && adversaire != playerName) {
@@ -373,9 +374,15 @@ io.sockets.on('connection', function(socket) {
             }
         }
     });
+    
+    socket.on('playerIsDead', function(playerName) {
+        for(var enemyName in usersConnected) {
+            if(usersConnected[enemyName].room == 'gameRoom1' && enemyName != playerName) {
+                console.log(enemyName + ' est mort !');
+            }
+        }
+    });
 });
-
-
 
 
 

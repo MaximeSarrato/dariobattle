@@ -5,6 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         {% include 'menu.twig' %}
         <title>Dario Battle</title>
+        <link rel="stylesheet" href="css/lobby.css"/>
         <script src="/socket.io/socket.io.js"></script>
         <script type="text/javascript">
 
@@ -122,9 +123,6 @@
 
         
         function animation() {
-        
-
-
 
           /* Notifie le navigateur que l'on veut exécuter une animation
              l'animation va être refresh en fonction des Hz de l'écran */
@@ -139,56 +137,96 @@
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           
 
-                    // Dessin de l'image statique du joueur 2 pour test
+          // Différentes images du joueur 2
           var luigiStandingLeft = new Image();
           luigiStandingLeft.src = "/img/luigiStandingLeft.png"
-
-          /* ####################### RECUPERATION COORDONNEES HERE !!!!! #################################### */
-          /* ####################### RECUPERATION COORDONNEES HERE !!!!! #################################### */
-          /* ####################### RECUPERATION COORDONNEES HERE !!!!! #################################### */
-          /* ####################### RECUPERATION COORDONNEES HERE !!!!! #################################### */
-          /* ####################### RECUPERATION COORDONNEES HERE !!!!! #################################### */
           
+          var luigiDying = new Image();
+          luigiDying.src = "/img/luigiDying.png"
+          
+          var luigiCrouchLeft = new Image();
+          luigiCrouchLeft.src = "/img/luigiCrouchLeft.png";
+          
+          var luigiJumpingLeft = new Image();
+          luigiJumpingLeft.src = "/img/luigiJumpingLeft.png";
+          
+          var luigiRunningLeft = new Image();
+          luigiRunningLeft.src = "/img/luigiRunningLeft.png";
+          
+
           // Envoyer en permanence au serveur les coordonnées après avoir bougé
           socket.emit('playerMoved', player1, '{{nom}}');
-        
+          
+  
+          
+          /* Ce listener récupère les propriétés du joueur adverse que le serveur
+             lui ait envoyé. Ces propriétés sont envoyées en permanence au serveur
+             par le joueur adverse */
           socket.on('enemyIsHere', function(enemy) {
              player2 = { 
               x: enemy.x,
               y: enemy.y,
               speedX: enemy.speedX,
               speedY: enemy.speedY,
+              alive: enemy.alive,
+              running: enemy.running,
+              jumping: enemy.jumping,
+              standing: enemy.standing,
+              crouch: enemy.crouch,
+              sliding: enemy.sliding,
+              goDown: enemy.goDown           
              }
+          });
 
-        });
-        
-        ctx.drawImage(luigiStandingLeft, player2.x, player2.y)
-        // console.log(Object.keys(player2));
+          /* Images du player2 en fonction de son état */
+          //if (player2.alive)
+          //  ctx.drawImage(luigiStandingLeft, player2.x, player2.y);
+          if (player2.standing)
+            ctx.drawImage(luigiStandingLeft, player2.x, player2.y);
+
+          if (player2.running)
+            ctx.drawImage(luigiRunningLeft, player2.x, player2.y);
+            
+          if (player2.jumping || player2.goDown)
+            ctx.drawImage(luigiJumpingLeft, player2.x, player2.y);
+            
+          if (player2.crouch)
+            ctx.drawImage(luigiCrouchLeft, player2.x, player2.y+15);
+            
 
           // Si le joueur court à gauche ou à droite et qu'il ne saute pas
-          if (player1.running && keyD && !player1.jumping || player1.running && keyQ && !player1.jumping) { 
-            // Image qui court vers la droite
-            player1.image.src = "/img/marioRunningRight.png";
+          if (player1.running && !player1.jumping) { 
+            if(keyD)
+              player1.image.src = "/img/marioRunningRight.png";
+            else if(keyQ)
+              player1.image.src = "/img/marioRunningLeft.png";
             ctx.drawImage(player1.image, player1.x, player1.y);
           }
 
           // Si le joueur saute ou qu'il a sauté et est en train de retomber
           else if (player1.jumping || player1.goDown ) {
-            // Image qui saute
-            player1.image.src = "/img/marioJumpingRight.png";
+            if(keyD)
+              player1.image.src = "/img/marioJumpingRight.png";
+            else if(keyQ)
+              player1.image.src = "/img/marioJumpingLeft.png";
+            else
+              player1.image.src = "/img/marioJumpingRight.png";
             ctx.drawImage(player1.image, player1.x, player1.y);
           }
           
           else if (player1.standing) {
-            // Image debout
             player1.image.src = "/img/marioStandingRight.png";
             ctx.drawImage(player1.image, player1.x, player1.y);
           }
           
           else if (player1.crouch) {
-            // Image accroupi
-            player1.image.src = "/img/marioCrouchRight.png";
-            ctx.drawImage(player1.image, player1.x+15, player1.y+15);
+            if(keyD)
+              player1.image.src = "/img/marioCrouchRight.png";
+            else if(keyQ)
+              player1.image.src = "/img/marioCrouchLeft.png";
+            else
+              player1.image.src = "/img/marioCrouchRight.png";
+            ctx.drawImage(player1.image, player1.x, player1.y+15);
           }
             
           if(keyZ || player1.jumping || player1.goDown) {
@@ -270,9 +308,18 @@
             distX = Math.sqrt(Math.pow(distX, 2));
             distY = Math.sqrt(Math.pow(distY, 2));
             
+            // Détecte qu'un joueur se fait écraser
             if (player1.goDown && distX < 25) {
-              if (distY == 46.39999999999998)
-                console.log("Tu viens de te faire fist");
+              if (distY == 46.39999999999998) {
+                player2.alive = false;
+                console.log("Tu as écrasé l'adversaire !");
+              }
+            }
+            
+            if(!player2.alive) {
+              ctx.drawImage(luigiDying, player2.x, player2.y)
+              console.log('Il est mort !');
+              socket.emit('playerIsDead', '{{nom}}');
             }
             
             
@@ -288,6 +335,6 @@
   </head>
   <!-- Une fois le body chargé on exécute la fonction draw -->
   <body>
-   <canvas id="darioScene" width="800" height="600" style="background: url(/img/background.jpg) no-repeat center center;">
+   <canvas id="darioScene" width="800" height="600">
   </body>
 </html>
