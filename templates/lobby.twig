@@ -7,17 +7,19 @@
         <title>Dario Battle : Lobby</title>
   </head>
   <body>
-        <p><h2>Joueurs en ligne</h2>
-        <table id = "onlinePlayers">
-        <th>Joueur </th>
-            {% for pseudo in joueursDispo %}
-            {% if (pseudo != nom) %}
+        <div class="container__onlinePlayers">
+            <table id="onlinePlayers">
+                <caption>Liste des joueurs dans le lobby</caption>
+                <th>Joueur </th>
+                {% for pseudo in joueursDispo %}
+                {% if (pseudo != nom) %}
                     <tr>
                         <td class="nomJoueur">{{pseudo}}</td> 
                     </tr>
-            {% endif %}
-            {% endfor %}
-    </table></p>
+                {% endif %}
+                {% endfor %}
+        </table>    
+    </div>
     <div id="menu"> 
     
     </div>
@@ -27,13 +29,9 @@
     <div id="gameInvitationWindow">
         
     </div>
-      <p><a id="play" href="/playdario">Lancer une partie !</a></p>
-      <p><a href="/userlist">Retour à l'accueil</a></p>
-      
     
     <script src="/socket.io/socket.io.js"></script>
     <script>
-    
         /* Change la page en page active pour le CSS */
         var currentPage = document.getElementsByClassName('play')[0];
         currentPage = currentPage.getElementsByTagName('a')[0];
@@ -41,7 +39,7 @@
         
         // Connexion avec le serveur Socket.IO
         var socket = io();
-        var playerLogin = '{{nom}}'
+        var playerLogin = '{{nom}}';
         // Tableau qui aura en première case le pseudo du joueur ciblé par le clic
         var nameTarget = [];
         /* Variable du cadre des joueurs disponible */
@@ -75,6 +73,8 @@
         gameInvitationWindow.style.visibility = "hidden";
         var buttonAccept = document.createElement('button');
         var buttonDecline = document.createElement('button');
+        buttonAccept.classList.add("answerInvit");
+        buttonDecline.classList.add("answerInvit");
         
         
         // Fonction permettant de modifier l'attribut CSS pour rendre visible un élément
@@ -218,9 +218,11 @@
         socket.on('invitedToGame', function(source, message) {
             var context = document.createTextNode('Le joueur ' + source + ' ' + message);
             var br = document.createElement('br');
+            var p = document.createElement('p');
             buttonAccept.textContent = 'Accepter';
             buttonDecline.textContent = 'Refuser';
-            gameInvitationWindow.appendChild(context);
+            gameInvitationWindow.appendChild(p);
+            p.appendChild(context);
             gameInvitationWindow.appendChild(br);
             gameInvitationWindow.appendChild(buttonAccept);
             gameInvitationWindow.appendChild(buttonDecline);
@@ -235,12 +237,16 @@
                 while(gameInvitationWindow.firstChild) {
                     gameInvitationWindow.removeChild(gameInvitationWindow.firstChild);
                 }
+                while(p.firstChild) {
+                    p.removeChild(p.firstChild);
+                }
                 /* On affiche un bloc afin d'informer que le joueur 
                 va être redirigé vers la partie */
-                context = document.createTextNode('Vous allez être redirigé vers la partie dans quelques secondes');
-                gameInvitationWindow.appendChild(context);
+                context = document.createTextNode('Vous allez etre redirige vers la partie dans quelques secondes');
+                p.appendChild(context);
+                gameInvitationWindow.appendChild(p);
                 afficheElement(gameInvitationWindow);
-                setTimeout(redirectToGame, 5000);
+                setTimeout(redirectToGame, 4000);
             })
             // Si le joueur refuse l'invitation
             buttonDecline.addEventListener('click', function() {
@@ -253,15 +259,17 @@
         });
         
         socket.on('invHasBeenAccepted', function(message) {
+            // Le joueur x a accepté votre invitation
             var context = document.createTextNode(message);
-            var redirection = document.createTextNode('Vous allez être redirigé vers la partie dans quelques secondes');
-            gameInvitationWindow.appendChild(context);
-            gameInvitationWindow.appendChild(redirection);
+            var redirection = document.createTextNode('Vous allez être redirige vers la partie dans quelques secondes');
+            var p = document.createElement('p');
+            p.appendChild(context);
+            p.appendChild(redirection);
+            gameInvitationWindow.appendChild(p);
             afficheElement(gameInvitationWindow);
             setTimeout(redirectToGame, 5000);
         });
-
-    </script>
+        </script>
 
       
   </body>

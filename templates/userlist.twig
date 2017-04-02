@@ -17,45 +17,49 @@
         </script>
         <!-- Liste de tous les membres -->
         <div class="members__block"> 
-            <p>Statistiques de tous les membres</p>
-            <table>
+            <table id="stat">
+                <caption>Statistiques des membres</caption>
                 <th>Joueur </th>
-                <th>Nombre de parties </th>
-                <th>Parties gagnées </th>
+                <th>Games </th>
+                <th>Kills </th>
+                <th>Deaths </th>
         <!--TWIG PART : Affiche tous les users de la database -->
                 {% for elt in users %}
                     <tr>
                         <td>{{elt.login}}</td> 
-                        <td>{{elt.nb_parties}}</td> 
-                        <td>{{elt.nb_p_gagnees}}</td> 
+                        <td>{{elt.games}}</td> 
+                        <td>{{elt.kills}}</td> 
+                        <td>{{elt.deaths}}</td> 
                         <br>
                     </tr>
+                    
                 {% endfor %}
+                
             </table>
         </div>
         
         <!-- Liste de tous les membres connectés -->
-        <p>Membres connectés</p>
-        
         <table>
-            <th>Joueur </th>
-            <th>Nombre de parties </th>
-            <th>Parties gagnées </th>
+            <caption>Membres connectes</caption>
+                <th>Joueur </th>
+                <th>Games </th>
+                <th>Kills </th>
+                <th>Deaths </th>
         
             {% for elt in users %}
                 {% for pseudo in connectes %}
                     {% if pseudo == elt.login %}
                     <tr>
                         <td>{{elt.login}}</td> 
-                        <td>{{elt.nb_parties}}</td> 
-                        <td>{{elt.nb_p_gagnees}}</td> 
+                        <td>{{elt.games}}</td> 
+                        <td>{{elt.kills}}</td> 
+                        <td>{{elt.deaths}}</td> 
                         <br>
                     </tr>
                     {% endif %}
                 {% endfor %}
             {% endfor %}
         </table>
-        <!-- Déconnexion -->
     </body>
 </html>
 

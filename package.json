@@ -1,9 +1,9 @@
 {
     "name": "aws-project",
     "author": {
-        "name": "Votre nom"
+        "name": "Sarrato Maxime Poirot Sébastien"
     },
-    "description": "Un projet du cours Applications Web et Sécurité",
+    "description": "Projet web : Dario Battle",
     "homepage": "http://defeo.lu/aws/",
     "version": "0.1.0",
     "repository": {

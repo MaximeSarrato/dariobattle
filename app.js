@@ -2,10 +2,10 @@
 
 var mysql = require('mysql');
 var db    = mysql.createConnection({
-  host     : process.env.IP,  // pas touche à ça : spécifique pour C9 !
-  user     : process.env.C9_USER.substr(0,16), // laissez comme ça
+  host     : process.env.IP, 
+  user     : process.env.C9_USER.substr(0,16), 
   password : '6;b9pC3d.Y[$9UJr',
-  database : 'c9'  // mettez ici le nom de la base de données
+  database : 'dario_database'  
 });
 
 var express = require('express');
@@ -36,9 +36,6 @@ app
 
 // Objet qui va contenir les membres connectés
 var usersConnected = {};
-
-// Tableau qui va contenir les salles 
-var rooms = [];
 
 // Variables pour le hash des mots de passe
 var bcrypt = require('bcrypt');
@@ -102,17 +99,18 @@ app.all('/', function (req, res) {
                         if (result == true) {
                             // Création des variables de session
                             req.session.login = rows[0].login;
-                            req.session.parties = rows[0].nb_parties;
-                            req.session.gagnees = rows[0].nb_p_gagnees;
+                            req.session.games = rows[0].games;
+                            req.session.kills = rows[0].kills;
+                            req.session.deaths = rows[0].deaths;
                             // Stockage de l'utilisateur et de ses données 
                             // dans l'objet userConnected
                             usersConnected[rows[0].login] = { 
-                                games: rows[0].nb_parties, 
-                                won: rows[0].nb_p_gagnees,
-                                statut: "LIBRE",
+                                games: rows[0].games, 
+                                kills: rows[0].kills,
+                                deaths: rows[0].deaths,
+                                statut: "ACCUEIL",
                                 adversaire: "NULL",
-                                gameSocket: 'NULL',
-                                socket: 'NULL',
+                                socket: "NULL",
                                 wsId: "NULL",
                                 room: "NULL",
                             };
@@ -153,7 +151,7 @@ app.all('/signup', function(req, res) {
             if (!err) {
                 // Insertion du login, hash du password et de la date de l'inscription
                 // du compte dans la base de données
-                db.query('INSERT INTO users VALUES (?, ?, 0, 0, ?)', [ req.body.login, hash, d ],
+                db.query('INSERT INTO users VALUES (?, ?, 0, 0, 0, ?)', [ req.body.login, hash, d ],
                 function(err,result) {
                     if(!err) {
                         res.redirect('/userlist');
@@ -185,12 +183,18 @@ app.get('/userlist', function(req, res) {
     }
     /* Sinon s'il est connecté il peut accéder à la page */
     else {
+        /* On change le statut du joueur à ACCUEIL et sa room à NULL
+        afin que s'il sorte de sa partie en cas de retour au site */
+        usersConnected[req.session.login].statut = "ACCUEIL";
+        usersConnected[req.session.login].room = "NULL"
+        
+        
         // Récupération des login des utilisateurs connectés
         for(var elt in usersConnected) {
             connectes[i] = elt;
             i++;
         }
-        
+
         db.query('SELECT * FROM users', function(err, rows) {
             // Si la requête réussit on envoie les tuples récupérés à userlist
             if (!err)
@@ -205,7 +209,7 @@ app.get('/userlist', function(req, res) {
 app.all('/playdario', function(req, res) {
     if(req.method == "GET") {
         
-        if(req.session.login) {
+        if(req.session.login && usersConnected[req.session.login].statut === 'INGAME') {
             res.render('plateau.twig', { 'nom' : req.session.login });
         }
         else {
@@ -222,9 +226,11 @@ app.get('/lobby', function(req, res) {
     
     if(req.session.login) {
         var i = 0; var joueursDispo = [];
+        usersConnected[req.session.login].statut = "LOBBY";
+        usersConnected[req.session.login].room = "NULL";
         // Récupération des login des utilisateurs connectés et disponible
         for(var login in usersConnected) {
-            if(usersConnected[login].statut == "LIBRE") {
+            if(usersConnected[login].statut == "LOBBY") {
                 joueursDispo[i] = login;
                 i++;
             }
@@ -263,6 +269,29 @@ function getId(target) {
     return usersConnected[target].wsId;
 }
 
+/* Fonction permettant de vérifier si un utilisateur est connecté */
+function isUserConnected(user) {
+    var connectedPlayers = []; var i = 0;
+    var playerFound;
+    // On stocke les logins des utilisateurs connectés dans un tableau
+    for(var login in usersConnected) {
+        connectedPlayers[i] = login;
+        i++;
+    }
+    // On compare le tableau avec user
+    // Si le joueur existe on renvoie true
+    for(i=0; i < connectedPlayers.length; i++) {
+        if(connectedPlayers[i] === user) {
+            playerFound = true;
+            return true;
+        }
+    }
+    // Sinon on renvoie false
+    if (!playerFound) {
+        return false;
+    }
+}
+
 /****************************************
 ** GESTIONNAIRE SOCKET.IO ***************
 ****************************************/
@@ -270,119 +299,168 @@ io.sockets.on('connection', function(socket) {
     // Lorsque un joueur arrive dans le lobby
     socket.on('lobbyConnection', function(pseudo) {
         // Stockage du socket et de l'id du socket dans les infos du joueur
-        if(socket.id != undefined) {
+        if(isUserConnected(pseudo) && socket.id != undefined) {
             usersConnected[pseudo].wsId = socket.id;
             usersConnected[pseudo].socket = socket;
             console.log('Connexion WebSocket de : ' + pseudo + ' dont l\'id est ' + socket.id);
             console.log(usersConnected);
             socket.broadcast.emit('newPlayerAvailable', pseudo);
         }
-        else {
+        else 
             console.log('Erreur, ce joueur n\'a pas de Websocket id');
-        }
-        
     });
     
     // Lorsque un joueur clique sur un joueur disponible dans le lobby
     socket.on('clickOnPlayer', function(source, target) {
-        console.log('Un clic sur le joueur ' + target + ' a été fait par ' + source + ' !');
+        if(isUserConnected(target) && isUserConnected(target))
+            console.log('Un clic sur le joueur ' + target + ' a été fait par ' + source + ' !');
+        else
+            console.log('ALERT : Modification de la page');
     });
     
     // Lorsque un joueur clique sur un joueur puis sur une intéraction
     // dans le menu déroulant
     socket.on('clickOnInteraction', function(source, interaction, target) {
-        
-        // On stocke l'id WebSocket de la cible
-        var idTarget = getId(target);
-        console.log('Source : ' + getId(source) + ' Target : ' + idTarget);
-        
-        /* Intéraction d'envoi de message entre joueurs */
-        if (interaction === "Envoyer un message") {
-            // Si l'id WebSocket du joueur existe
-            if (idTarget != undefined) {
-                console.log('Envoi de message');
+        console.log('source = ' + source + ' target = ' + target);
+        // On vérifie que les utilisateurs existent et sont connectés
+        if(isUserConnected(source) && isUserConnected(target)) {
+            // On stocke l'id WebSocket de la cible
+            var idTarget = getId(target);
+            console.log('Source : ' + getId(source) + ' Target : ' + idTarget);
+            
+            /* Intéraction d'envoi de message entre joueurs */
+            if (interaction === "Envoyer un message") {
+                // Si l'id WebSocket du joueur existe
+                if (idTarget != undefined) {
+                    console.log('Envoi de message');
+                }
+                else {
+                    console.log('Cet utilisateur n\'est plus connecté !');
+                }
             }
-            else {
-                console.log('Cet utilisateur n\'est plus connecté !');
-            }
-        }
+                    
+            /* Intéraction d'invitation à la partie entre joueurs */
+            else if (interaction === "Inviter à jouer") {
+                console.log('Invitation à jouer');
                 
-        /* Intéraction d'invitation à la partie entre joueurs */
-        else if (interaction === "Inviter à jouer") {
-            console.log('Invitation à jouer');
-            
-            if(idTarget != undefined) {
-                var message = ' vous invite à faire une partie.';
-                socket.to(idTarget).emit('invitedToGame', source, message);
+                if(idTarget != undefined) {
+                    var message = ' vous invite à faire une partie.';
+                    socket.to(idTarget).emit('invitedToGame', source, message);
+                }
+                
+                else {
+                    console.log('Cet utilisateur n\'est plus connecté !');
+                }
             }
             
+            /* Si l'intéraction n'existe pas */
             else {
-                console.log('Cet utilisateur n\'est plus connecté !');
+                console.log('Le joueur ' + source + ' tente une intéraction inconnue vers ' + target);
             }
         }
-        
-        /* Si l'intéraction n'existe pas */
-        else {
-            console.log('Le joueur ' + source + ' tente une intéraction inconnue vers ' + target);
-        }
+
     });
     
     // On envoie à la cible le message écrit dans le prompt 
     socket.on('sendMessageFromPrompt', function(source, message, target) {
+        if (usersConnected[source] && usersConnected[target]) {
             socket.to(getId(target)).emit('sendMsg', source, message);
+        }
     });
     
     // Invitation à jouer envoyée par sender et acceptée par le receiver
     socket.on('acceptInvitation', function(sender, receiver) {
-        // Notifier le joueur que son invitation a été acceptée
-        var message = 'Le joueur ' + receiver + ' a accepté votre invitation !';
-        socket.to(getId(sender)).emit('invHasBeenAccepted', message);
-        // On change les statuts des joueurs
-        usersConnected[sender].statut = "INGAME";
-        usersConnected[receiver].statut = "INGAME";
-        console.log('Invit lancée par ' + sender + ' et acceptée par ' + receiver);
+        
+        /* On vérifie que le sender et le receiver existent bien et sont bien connectés
+        et qu'ils sont bien dans l'état "INGAME" */
+        if (isUserConnected(sender) && isUserConnected(receiver)) {
+            
+            // Notifier le joueur que son invitation a été acceptée
+            var message = 'Le joueur ' + receiver + ' a accepte votre invitation !';
+            socket.to(getId(sender)).emit('invHasBeenAccepted', message);
+            
+            // On change les statuts des joueurs
+            usersConnected[sender].statut = "INGAME";
+            usersConnected[receiver].statut = "INGAME";
+
+            /* On incrémente le nombre de partie des deux joueurs */ 
+            db.query('UPDATE users SET games = games+1 WHERE LOGIN = ?', [sender], 
+            function(err, result) {
+                if (err) 
+                    console.log(err);
+            });   
+            db.query('UPDATE users SET games = games+1 WHERE LOGIN = ?', [receiver], 
+            function(err, result) {
+                if (err) 
+                    console.log(err);
+            });  
+        }
     });
     
     // Invitation à jouer refusée
     socket.on('declineInvitation', function(sender, receiver) {
-        console.log('Invit lancée par ' + sender + ' et refusée par ' + receiver);
+        if (isUserConnected(sender) && isUserConnected(receiver)) {
+            console.log('Invit lancée par ' + sender + ' et refusée par ' + receiver);
+        }
     });
     
     // Quand le joueur arrive dans la partie Dario Battle
     socket.on('playerInGame', function(playerName) {
         // Bug : besoin de join deux fois la salle pour pouvoir y être sans refresh
         // la page
-        usersConnected[playerName].socket.join('gameRoom1');
+        if(isUserConnected(playerName))
+            usersConnected[playerName].socket.join('gameRoom1');
     });
     
     // Le joueur demande une salle pour jouer
     socket.on('needRoom', function(playerName) {
         // Bug : besoin de join deux fois la salle pour 
         // pouvoir y être sans refresh la page
-        usersConnected[playerName].socket.join('gameRoom1');
-        usersConnected[playerName].room = 'gameRoom1';
-        console.log('Rooms de ' + playerName + ' = ' + Object.keys(usersConnected[playerName].socket.rooms));
-        // Ce emit devrait être un emit vers la room mais fonctionne pas
-        socket.emit('roomHasBeenJoined', 'Tu as rejoint la salle !');
+        if(isUserConnected(playerName)) {
+            usersConnected[playerName].socket.join('gameRoom1');
+            usersConnected[playerName].room = 'gameRoom1';
+            console.log('Rooms de ' + playerName + ' = ' + Object.keys(usersConnected[playerName].socket.rooms));
+            // Ce emit devrait être un emit vers la room mais fonctionne pas
+            socket.emit('roomHasBeenJoined', 'Tu as rejoint la salle !');
+        }
     });
     
     // Dés qu'un joueur bouge on envoie ses positions à l'autre joueur
     socket.on('playerMoved', function(player, playerName) {
-        for(var adversaire in usersConnected) {
-            if(usersConnected[adversaire].room == 'gameRoom1' && adversaire != playerName) {
-                socket.broadcast.emit('enemyIsHere', player);
+        if(isUserConnected(playerName)) {
+            for(var adversaire in usersConnected) {
+                if(usersConnected[adversaire].room == 'gameRoom1' && adversaire != playerName) {
+                    socket.broadcast.emit('enemyIsHere', player);
+                }
             }
         }
     });
     
     // Lorsque un joueur est mort
     socket.on('playerIsDead', function(killerName) {
-        for(var enemyName in usersConnected) {
-            if(usersConnected[enemyName].room == 'gameRoom1' && enemyName != killerName) {
-                console.log(enemyName + ' est mort !');
-                // On signale au joueur qu'il est mort afin de changer son statut
-                socket.broadcast.emit('youAreDeadBro', killerName);
+        if(isUserConnected(killerName)) {
+            /* On parcourt les utilisateurs connectés qui sont dans la salle gameRoom1
+            Lorsque on tombe sur un joueur ayant un nom différent de killerName 
+            alors c'est lui qui est mort */
+            for(var enemyName in usersConnected) {
+                if(usersConnected[enemyName].room == 'gameRoom1' && enemyName != killerName) {
+                    console.log(enemyName + ' est mort !');
+                    // On signale au joueur qu'il est mort afin de changer son statut
+                    socket.broadcast.emit('youAreDeadBro', killerName);
+                }
             }
+            /* On incrémente le nombre de kills */ 
+            db.query('UPDATE users SET kills = kills+1 WHERE LOGIN = ?', [killerName], 
+            function(err, result) {
+                if (err) 
+                    console.log(err);
+            });   
+            // On incrémente la mort
+            db.query('UPDATE users SET deaths = deaths+1 WHERE LOGIN = ?', [enemyName], 
+            function(err, result) {
+                if (err) 
+                    console.log(err);
+            }); 
         }
     });
 });

@@ -26,8 +26,12 @@
           console.log(message);
         });
         
-        /* Constructeur de l'objet Player */
+        // Quand un des deux joueurs est mort on redirige vers l'accueil
+        function redirectToHome() {
+            document.location.href='/';
+        }
         
+        /* Constructeur de l'objet Player */
         function Player(x, y, speedX, speedY) {
           this.x = x;
           this.y = y;
@@ -44,6 +48,8 @@
           this.image.src = "/img/marioStandingRight.png";
         }
         
+        var fps,then,now,tempsPasse,fpsRate;
+
 
         // Images utilisées par le joueur 2
         var luigiStandingLeft = new Image();
@@ -131,16 +137,20 @@
           }
         }
         
-        // On instancie player 1 avec ses coordonnées et ses vitesses
-        var player1 = new Player(300, 545, 10, -300);
+        // On instancie player 1 avec ses coordonnées et ses vitesses(on le place de manière aléatoire sur le sol)
+        var player1 = new Player(((Math.random()*700)+100), 545, 10, -300);
 
         
         function animation() {
-
+          
           /* Notifie le navigateur que l'on veut exécuter une animation
              l'animation va être refresh en fonction des Hz de l'écran */
           window.requestAnimationFrame(animation);
-          
+          now=Date.now();
+          tempsPasse=now-then;
+          if(tempsPasse > fpsRate)
+          {
+            then=now-(tempsPasse % fpsRate)
           // Scène de Dario Battle 
           var canvas = document.getElementById("darioScene");
           // La variable ctx contient l'endroit où on va dessiner.
@@ -177,16 +187,15 @@
               player2.crouch = false;
               player2.sliding = false;
               player2.goDown = false;
-             // ctx.drawImage(luigiDying, player2.x, player2.y);
               }            
           });
           
           // Listener de l'évènement envoyé par le serveur qui signale au joueur qu'il est mort
           socket.on('youAreDeadBro', function(killerName) {
-            console.log('Tu es mort ! ' + '{{nom}}' + ' a été tué par ' + killerName);
             player1.alive = false;
             player1.image.src = "/img/marioDying.png";
-            ctx.drawImage(player1.image, player1.x, player1.y);
+            ctx.drawImage(player1.image, player1.x, player1.y+15);
+            setTimeout(redirectToHome, 3000);
           });
           
           // Si le joueur est mort on met tous ses états à false
@@ -199,6 +208,9 @@
             player1.goDown = false;
             ctx.drawImage(player1.image, player1.x, player1.y);
             }          
+            
+          
+            
           /************** DIFFERENT IMAGES OF PLAYER 2 **************/
           // Si le joueur 2 est debout
           if (player2.standing)
@@ -214,7 +226,7 @@
             ctx.drawImage(luigiCrouchLeft, player2.x, player2.y+15);
           // Si il est mort
           if (player2.alive == false) {
-            ctx.drawImage(luigiDying, player2.x, player2.y);
+            ctx.drawImage(luigiDying, player2.x, player2.y+15);
           }
             
 
@@ -254,64 +266,74 @@
               player1.image.src = "/img/marioCrouchRight.png";
             ctx.drawImage(player1.image, player1.x, player1.y+15);
           }
+          /* ########### CHARACTER DEPLACEMENT BEGIN ########### */
+          /* ########### CHARACTER DEPLACEMENT BEGIN ########### */
+          /* ########### CHARACTER DEPLACEMENT BEGIN ########### */
+          if(player1.alive) {
             
-          if(keyZ || player1.jumping || player1.goDown) {
-            player1.crouch = false;
-            player1.jumping = true;
-            player1.standing = false;
-            player1.y += 0.08 * player1.speedY;
-            player1.speedY += K;
-            
-            if (player1.speedY > 0) {
-                player1.jumping = false;
-                player1.goDown = true;
-            }
-          }
-            
-          if(keyS && player1.y == 545) {
-            player1.running = false;
-            player1.standing = false;
-            player1.jumping = false;
-            player1.goDown = false;
-            player1.crouch = true;
-          }
-          // mario se déplace vers la droite si la touche D est enfoncée
-          if (keyD && !keyS) {
-            player1.crouch = false;
-            player1.standing = false;
-            player1.running = true;
-            player1.x += player1.speedX;
-          }
-          
-          if (!keyD && !keyQ && !keyS) {
+            if(keyZ || player1.jumping || player1.goDown) {
               player1.crouch = false;
-              player1.standing = true;
-              player1.running = false;
-            }
-            // mario se déplace vers la gauche si Q est enfoncée
-            if (keyQ && !keyS) {
+              player1.jumping = true;
               player1.standing = false;
-              player1.running = true;
-              player1.crouch = false;
-              player1.x -= player1.speedX;
+              player1.y += 0.08 * player1.speedY;
+              player1.speedY += K;
+             // effetSonore('saut');
+              
+              if (player1.speedY > 0) {
+                  player1.jumping = false;
+                  player1.goDown = true;
+              }
             }
-            
-            if (player1.y > 545) {
+              
+            if(keyS && player1.y == 545) {
+              player1.running = false;
+              player1.standing = false;
               player1.jumping = false;
               player1.goDown = false;
-              player1.y = 545;
-              player1.speedY = -300;
+              player1.crouch = true;
+            }
+            // mario se déplace vers la droite si la touche D est enfoncée
+            if (keyD && !keyS) {
+              player1.crouch = false;
+              player1.standing = false;
+              player1.running = true;
+              player1.x += player1.speedX;
             }
             
-            /* Si le joueur sort du cadre alors il revient de l'autre côté */
-            if (player1.x < -65) {
-              player1.x = 810;
-            }
-            
-            else if(player1.x > 810) {
-              player1.x = -65;
-            }
-            
+            if (!keyD && !keyQ && !keyS) {
+                player1.crouch = false;
+                player1.standing = true;
+                player1.running = false;
+              }
+              // mario se déplace vers la gauche si Q est enfoncée
+              if (keyQ && !keyS) {
+                player1.standing = false;
+                player1.running = true;
+                player1.crouch = false;
+                player1.x -= player1.speedX;
+              }
+              
+              if (player1.y > 545) {
+                player1.jumping = false;
+                player1.goDown = false;
+                player1.y = 545;
+                player1.speedY = -300;
+              }
+              
+              /* Si le joueur sort du cadre alors il revient de l'autre côté */
+              if (player1.x < -65) {
+                player1.x = 810;
+              }
+              
+              else if(player1.x > 810) {
+                player1.x = -65;
+              }
+          }
+              
+          /* ########### CHARACTER DEPLACEMENT END ########### */
+          /* ########### CHARACTER DEPLACEMENT END ########### */
+          /* ########### CHARACTER DEPLACEMENT END ########### */
+          
             /* Détection de la collision entre les 2 joueurs
             par le calcul de la distance entre les deux */
             var distX = player1.x - player2.x;
@@ -324,22 +346,55 @@
               if (distY == 46.39999999999998) {
                 /* On envoie l'évenement playerIsDead au serveur
                    avec le nom du compte qui l'a tué */
-                socket.emit('playerIsDead', '{{nom}}');
-                console.log("Tu as écrasé l'adversaire !");
+                if(player1.alive && player2.alive) {   
+                  socket.emit('playerIsDead', '{{nom}}');
+                  // On redirige les joueurs vers l'accueil quand la game est finie
+                  setTimeout(redirectToHome, 3000);
+                }
               }
             }
+            
+            /* Si un des deux joueurs est mort on affiche le message de ENDGAME */
+            if(!player1.alive || !player2.alive) {
+              ctx.font = "50px smbFont";
+              ctx.fillStyle = "#FFD700";
+              ctx.textAlign="center";
+              ctx.fillText('GAME IS OVER !', 400, 150);   
+            }
+          }
         }
-        window.requestAnimationFrame(animation);
-        </script>
         
-    
+        // gestion des fps
+        function debutAnimation(fps)
+        {
+          fpsRate=1000/fps;
+          then=Date.now();
+          animation();
+        }
+        // Fonction qui bruite le saut de mario
+       /* function effetSonore(event)
+        {
+          var son;
+          if(event == "saut")
+          son=document.getElementById('boing')
+          
+          son.play();
+        }*/
+        
+        debutAnimation(60);
+        </script>
+
     <style type="text/css">
+    
       canvas { border: 1px solid black; }
     </style>
     
   </head>
   <!-- Une fois le body chargé on exécute la fonction draw -->
   <body>
-   <canvas id="darioScene" width="800" height="600">
+    
+   <canvas id="darioScene" width="800" height="600">canvas non supportés</canvas>
+   <audio src="/sound/mario.mp3" id="musique" autoplay loop controls></audio>
+   <!--<audio src="/sound/marioSaut.mp3" id='boing' style="display:none"></audio>-->
   </body>
 </html>
