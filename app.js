@@ -375,10 +375,13 @@ io.sockets.on('connection', function(socket) {
         }
     });
     
-    socket.on('playerIsDead', function(playerName) {
+    // Lorsque un joueur est mort
+    socket.on('playerIsDead', function(killerName) {
         for(var enemyName in usersConnected) {
-            if(usersConnected[enemyName].room == 'gameRoom1' && enemyName != playerName) {
+            if(usersConnected[enemyName].room == 'gameRoom1' && enemyName != killerName) {
                 console.log(enemyName + ' est mort !');
+                // On signale au joueur qu'il est mort afin de changer son statut
+                socket.broadcast.emit('youAreDeadBro', killerName);
             }
         }
     });

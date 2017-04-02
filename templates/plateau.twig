@@ -42,18 +42,30 @@
           this.goDown = false;
           this.image = new Image();
           this.image.src = "/img/marioStandingRight.png";
-          
-      
-            
-          
-          this.getX = function() {
-            return this.x;
-          }
         }
-       
+        
+
+        // Images utilisées par le joueur 2
+        var luigiStandingLeft = new Image();
+        luigiStandingLeft.src = "/img/luigiStandingLeft.png"
+        
+        var luigiDying = new Image();
+        luigiDying.src = "/img/luigiDying.png"
+        
+        var luigiCrouchLeft = new Image();
+        luigiCrouchLeft.src = "/img/luigiCrouchLeft.png";
+        
+        var luigiJumpingLeft = new Image();
+        luigiJumpingLeft.src = "/img/luigiJumpingLeft.png";
+        
+        var luigiRunningLeft = new Image();
+        luigiRunningLeft.src = "/img/luigiRunningLeft.png";  
+        
+        var luigiDying = new Image();
+        luigiDying.src = "img/luigiDying.png";
         
         /* L'objet player du joueur adverse, ses propriétés seront définies
-           dans le listener enemyIsHere de socket.io */
+        dans le listener enemyIsHere de socket.io */
         var player2 = {};
         
         // On met à faux les différentes touches de jeu
@@ -74,7 +86,8 @@
                 window.oRequestAnimationFrame;
                 window.requestAnimationFrame = requestAnimationFrame;
         })();
-        // Evenement pour savoir quelles touches sont utilisées
+        
+        // Evenements pour savoir quelles touches sont utilisées
         window.addEventListener("keydown",onKeyDown,false);
         window.addEventListener("keyup",onKeyUp,false);
         
@@ -135,29 +148,9 @@
           
           // On clear toute la scène de jeu à chaque rafraichissement d'écran 
           ctx.clearRect(0, 0, canvas.width, canvas.height);
-          
 
-          // Différentes images du joueur 2
-          var luigiStandingLeft = new Image();
-          luigiStandingLeft.src = "/img/luigiStandingLeft.png"
-          
-          var luigiDying = new Image();
-          luigiDying.src = "/img/luigiDying.png"
-          
-          var luigiCrouchLeft = new Image();
-          luigiCrouchLeft.src = "/img/luigiCrouchLeft.png";
-          
-          var luigiJumpingLeft = new Image();
-          luigiJumpingLeft.src = "/img/luigiJumpingLeft.png";
-          
-          var luigiRunningLeft = new Image();
-          luigiRunningLeft.src = "/img/luigiRunningLeft.png";
-          
-
-          // Envoyer en permanence au serveur les coordonnées après avoir bougé
+          // Envoyer en permanence au serveur les coordonnées et les états du personnage
           socket.emit('playerMoved', player1, '{{nom}}');
-          
-  
           
           /* Ce listener récupère les propriétés du joueur adverse que le serveur
              lui ait envoyé. Ces propriétés sont envoyées en permanence au serveur
@@ -176,22 +169,53 @@
               sliding: enemy.sliding,
               goDown: enemy.goDown           
              }
+            // Si le joueur est mort on met tous ses états à false
+            if (player2.alive == false) {
+              player2.running = false;
+              player2.jumping = false;
+              player2.standing = false;
+              player2.crouch = false;
+              player2.sliding = false;
+              player2.goDown = false;
+             // ctx.drawImage(luigiDying, player2.x, player2.y);
+              }            
           });
-
-          /* Images du player2 en fonction de son état */
-          //if (player2.alive)
-          //  ctx.drawImage(luigiStandingLeft, player2.x, player2.y);
+          
+          // Listener de l'évènement envoyé par le serveur qui signale au joueur qu'il est mort
+          socket.on('youAreDeadBro', function(killerName) {
+            console.log('Tu es mort ! ' + '{{nom}}' + ' a été tué par ' + killerName);
+            player1.alive = false;
+            player1.image.src = "/img/marioDying.png";
+            ctx.drawImage(player1.image, player1.x, player1.y);
+          });
+          
+          // Si le joueur est mort on met tous ses états à false
+          if (player1.alive == false) {
+            player1.running = false;
+            player1.jumping = false;
+            player1.standing = false;
+            player1.crouch = false;
+            player1.sliding = false;
+            player1.goDown = false;
+            ctx.drawImage(player1.image, player1.x, player1.y);
+            }          
+          /************** DIFFERENT IMAGES OF PLAYER 2 **************/
+          // Si le joueur 2 est debout
           if (player2.standing)
             ctx.drawImage(luigiStandingLeft, player2.x, player2.y);
-
+          // Si il court
           if (player2.running)
             ctx.drawImage(luigiRunningLeft, player2.x, player2.y);
-            
+          // Si il saute ou retombe  
           if (player2.jumping || player2.goDown)
             ctx.drawImage(luigiJumpingLeft, player2.x, player2.y);
-            
+          // Si il s'accroupit  
           if (player2.crouch)
             ctx.drawImage(luigiCrouchLeft, player2.x, player2.y+15);
+          // Si il est mort
+          if (player2.alive == false) {
+            ctx.drawImage(luigiDying, player2.x, player2.y);
+          }
             
 
           // Si le joueur court à gauche ou à droite et qu'il ne saute pas
@@ -214,11 +238,13 @@
             ctx.drawImage(player1.image, player1.x, player1.y);
           }
           
+          // Si le joueur 1 est debout
           else if (player1.standing) {
             player1.image.src = "/img/marioStandingRight.png";
             ctx.drawImage(player1.image, player1.x, player1.y);
           }
           
+          /* Si le joueur s'accroupit */
           else if (player1.crouch) {
             if(keyD)
               player1.image.src = "/img/marioCrouchRight.png";
@@ -267,7 +293,7 @@
               player1.standing = false;
               player1.running = true;
               player1.crouch = false;
-              player1.x-=player1.speedX;
+              player1.x -= player1.speedX;
             }
             
             if (player1.y > 545) {
@@ -277,7 +303,7 @@
               player1.speedY = -300;
             }
             
-            /* Si le joueur sort du cadre par la gauche alors il arrive à droite */
+            /* Si le joueur sort du cadre alors il revient de l'autre côté */
             if (player1.x < -65) {
               player1.x = 810;
             }
@@ -285,24 +311,9 @@
             else if(player1.x > 810) {
               player1.x = -65;
             }
-            /*
-            // Mario accroupit et glisse vers droite 
-            if(keyS && keyD) {
-              player1.crouch = true;
-              player1.slide = true;
-              player1.x += player1.speedX;
-            }
-            // Mario accroupit et glisse vers gauche 
-            else if(keyS && keyQ) {
-              player1.crouch = true;
-              player1.slide = true;
-              if(player1.slide == true) {
-                player1.x -= player1.speedX;
-              }
-            }
-            */
             
-            // collision de base (grace a la distance)
+            /* Détection de la collision entre les 2 joueurs
+            par le calcul de la distance entre les deux */
             var distX = player1.x - player2.x;
             var distY = player1.y - player2.y;
             distX = Math.sqrt(Math.pow(distX, 2));
@@ -311,18 +322,12 @@
             // Détecte qu'un joueur se fait écraser
             if (player1.goDown && distX < 25) {
               if (distY == 46.39999999999998) {
-                player2.alive = false;
+                /* On envoie l'évenement playerIsDead au serveur
+                   avec le nom du compte qui l'a tué */
+                socket.emit('playerIsDead', '{{nom}}');
                 console.log("Tu as écrasé l'adversaire !");
               }
             }
-            
-            if(!player2.alive) {
-              ctx.drawImage(luigiDying, player2.x, player2.y)
-              console.log('Il est mort !');
-              socket.emit('playerIsDead', '{{nom}}');
-            }
-            
-            
         }
         window.requestAnimationFrame(animation);
         </script>
