@@ -33,6 +33,7 @@ td {
      text-align:center;
      transition-duration: 0.5s;
      background-color: #e7e7e7;
+     text-transform: capitalize;
  }
  
  .nomJoueur:hover {

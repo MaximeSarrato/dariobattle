@@ -12,7 +12,7 @@
                 <caption>Liste des joueurs dans le lobby</caption>
                 <th>Joueur </th>
                 {% for pseudo in joueursDispo %}
-                {% if (pseudo != nom) %}
+                {% if pseudo != nom %}
                     <tr>
                         <td class="nomJoueur">{{pseudo}}</td> 
                     </tr>
@@ -115,7 +115,6 @@
             // Si l'utilisateur veut envoyer un message
             if (interaction === "Envoyer un message") {
                 // On affiche le prompt
-                console.log('JE VEUX ENVOYER UN MESSAGE');
                 /* On crée le prompt */
                 afficheElement(prompt);
                 document.body.appendChild(prompt);
@@ -246,7 +245,7 @@
                 p.appendChild(context);
                 gameInvitationWindow.appendChild(p);
                 afficheElement(gameInvitationWindow);
-                setTimeout(redirectToGame, 4000);
+                setTimeout(redirectToGame, 3000);
             })
             // Si le joueur refuse l'invitation
             buttonDecline.addEventListener('click', function() {
@@ -261,13 +260,13 @@
         socket.on('invHasBeenAccepted', function(message) {
             // Le joueur x a accepté votre invitation
             var context = document.createTextNode(message);
-            var redirection = document.createTextNode('Vous allez être redirige vers la partie dans quelques secondes');
+            var redirection = document.createTextNode('Vous allez etre redirige vers la partie dans quelques secondes');
             var p = document.createElement('p');
             p.appendChild(context);
             p.appendChild(redirection);
             gameInvitationWindow.appendChild(p);
             afficheElement(gameInvitationWindow);
-            setTimeout(redirectToGame, 5000);
+            setTimeout(redirectToGame, 3000);
         });
         </script>
 

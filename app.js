@@ -70,6 +70,7 @@ app.all('/', function (req, res) {
     }
         
     else if (req.method == "POST") {
+        
         // Recherche si le login existe dans la BD
         db.query('SELECT * FROM users WHERE login = ?',
         [ req.body.login ], function(err, rows) {
@@ -98,16 +99,18 @@ app.all('/', function (req, res) {
                         // Si c'est le bon mot de passe
                         if (result == true) {
                             // Création des variables de session
-                            req.session.login = rows[0].login;
+                            var login = rows[0].login.toLowerCase();
+                            req.session.login = login;
                             req.session.games = rows[0].games;
                             req.session.kills = rows[0].kills;
                             req.session.deaths = rows[0].deaths;
                             // Stockage de l'utilisateur et de ses données 
                             // dans l'objet userConnected
-                            usersConnected[rows[0].login] = { 
+                            usersConnected[login] = { 
                                 games: rows[0].games, 
                                 kills: rows[0].kills,
                                 deaths: rows[0].deaths,
+                                sessionID: req.sessionID,
                                 statut: "ACCUEIL",
                                 adversaire: "NULL",
                                 socket: "NULL",
@@ -175,32 +178,35 @@ app.all('/signup', function(req, res) {
 ****************************************/
 app.get('/userlist', function(req, res) {
     var i = 0; var connectes = [];
-    
-    // Si l'utilisateur tente d'accéder à la page sans être connecté
-    // Redirection vers la page de connexion
-    if(!req.session.login) {
-        res.redirect('/');
-    }
-    /* Sinon s'il est connecté il peut accéder à la page */
-    else {
-        /* On change le statut du joueur à ACCUEIL et sa room à NULL
-        afin que s'il sorte de sa partie en cas de retour au site */
+    // Si l'user a une variable de session 
+    if (req.session.login) {
+
+        /* On change les informations du joueur lors de son arrivée / retour dans l'accueil */
         usersConnected[req.session.login].statut = "ACCUEIL";
-        usersConnected[req.session.login].room = "NULL"
-        
+        usersConnected[req.session.login].room = "NULL";
+        usersConnected[req.session.login].adversaire = "NULL";
         
         // Récupération des login des utilisateurs connectés
-        for(var elt in usersConnected) {
-            connectes[i] = elt;
+        for(var joueur in usersConnected) {
+            connectes[i] = joueur;
             i++;
         }
-
-        db.query('SELECT * FROM users', function(err, rows) {
+        // Tri par nombre de kills et on envoie tous les joueurs ainsi que ceux qui sont co dans la page
+        db.query('SELECT * FROM users ORDER BY kills DESC', function(err, rows) {
+            /* On récupère les logins et on les met en minuscule afin que la comparaison
+            dans la boucle twig pour obtenir les membres connectés 
+            puisse bien trouver les logins correspondants */
+            for (i = 0; i < rows.length; i++) {
+                rows[i].login = rows[i].login.toLowerCase();
+            }
             // Si la requête réussit on envoie les tuples récupérés à userlist
             if (!err)
                 res.render('userlist.twig', { 'users' : rows, 'nom' : req.session.login, 'connectes' : connectes });
         });
     }
+    else 
+        res.redirect('/');
+    
 });
 
 /****************************************
@@ -209,7 +215,7 @@ app.get('/userlist', function(req, res) {
 app.all('/playdario', function(req, res) {
     if(req.method == "GET") {
         
-        if(req.session.login && usersConnected[req.session.login].statut === 'INGAME') {
+        if(req.session.login && usersConnected[req.session.login].statut === 'INGAME' && usersConnected[req.session.login].adversaire != req.session.login.toLowerCase()) {
             res.render('plateau.twig', { 'nom' : req.session.login });
         }
         else {
@@ -224,23 +230,22 @@ app.all('/playdario', function(req, res) {
 ****************************************/
 app.get('/lobby', function(req, res) {
     
-    if(req.session.login) {
+    if(req.session.login && isUserConnected(req.session.login)) {
         var i = 0; var joueursDispo = [];
         usersConnected[req.session.login].statut = "LOBBY";
         usersConnected[req.session.login].room = "NULL";
         // Récupération des login des utilisateurs connectés et disponible
         for(var login in usersConnected) {
             if(usersConnected[login].statut == "LOBBY") {
-                joueursDispo[i] = login;
+                joueursDispo[i] = login.toLowerCase();
                 i++;
             }
         }
         res.render('lobby.twig', { 'nom' : req.session.login, 'joueursDispo' : joueursDispo });
     }
     
-    else if(!req.session.login){
+    else
         res.redirect('/');
-    }
     
 });
     
@@ -248,20 +253,27 @@ app.get('/lobby', function(req, res) {
 ** GESTIONNAIRE DE DECONNEXION **********
 ****************************************/
 app.all('/logout', function(req, res) {
+    console.log(req.session.login);
     if(req.session.login) {
         var login = req.session.login;
         req.session.destroy(function(err) {
             if(!err) {
-                delete usersConnected[login];
-                console.log('Session détruite');
-                console.log(usersConnected);
+                if(isUserConnected(login)) {
+                    delete usersConnected[login];
+                    console.log('Session détruite');
+                    console.log(usersConnected);
+                }
             }    
         });
         res.redirect('/');
     }
-    else {
+    else
         res.redirect('/');
-    }
+});
+
+/* Gestionnaire des pages inexistantes */
+app.all('*', function(req, res) {
+    res.redirect('/');
 });
 
 /* Fonction permettant de récupérer l'id WebSocket d'un joueur */
@@ -302,7 +314,6 @@ io.sockets.on('connection', function(socket) {
         if(isUserConnected(pseudo) && socket.id != undefined) {
             usersConnected[pseudo].wsId = socket.id;
             usersConnected[pseudo].socket = socket;
-            console.log('Connexion WebSocket de : ' + pseudo + ' dont l\'id est ' + socket.id);
             console.log(usersConnected);
             socket.broadcast.emit('newPlayerAvailable', pseudo);
         }
@@ -312,7 +323,7 @@ io.sockets.on('connection', function(socket) {
     
     // Lorsque un joueur clique sur un joueur disponible dans le lobby
     socket.on('clickOnPlayer', function(source, target) {
-        if(isUserConnected(target) && isUserConnected(target))
+        if(isUserConnected(target) && isUserConnected(target)) 
             console.log('Un clic sur le joueur ' + target + ' a été fait par ' + source + ' !');
         else
             console.log('ALERT : Modification de la page');
@@ -342,14 +353,14 @@ io.sockets.on('connection', function(socket) {
             /* Intéraction d'invitation à la partie entre joueurs */
             else if (interaction === "Inviter à jouer") {
                 console.log('Invitation à jouer');
-                
-                if(idTarget != undefined) {
-                    var message = ' vous invite à faire une partie.';
+                // Si le target à un id WebSocket et que le joueur n'essaie pas de s'inviter lui-même
+                if(idTarget != undefined && source.toLowerCase() != target.toLowerCase()) {
+                    var message = ' vous invite a faire une partie.';
                     socket.to(idTarget).emit('invitedToGame', source, message);
                 }
                 
                 else {
-                    console.log('Cet utilisateur n\'est plus connecté !');
+                    console.log('Cet utilisateur n\'est plus connecté ou bien il essaie de s\'inviter lui même !');
                 }
             }
             
@@ -382,6 +393,8 @@ io.sockets.on('connection', function(socket) {
             // On change les statuts des joueurs
             usersConnected[sender].statut = "INGAME";
             usersConnected[receiver].statut = "INGAME";
+            usersConnected[sender].adversaire = receiver;
+            usersConnected[receiver].adversaire = sender;
 
             /* On incrémente le nombre de partie des deux joueurs */ 
             db.query('UPDATE users SET games = games+1 WHERE LOGIN = ?', [sender], 
@@ -438,33 +451,35 @@ io.sockets.on('connection', function(socket) {
     
     // Lorsque un joueur est mort
     socket.on('playerIsDead', function(killerName) {
+        var deadPlayerName = '';
+        
         if(isUserConnected(killerName)) {
             /* On parcourt les utilisateurs connectés qui sont dans la salle gameRoom1
             Lorsque on tombe sur un joueur ayant un nom différent de killerName 
             alors c'est lui qui est mort */
-            for(var enemyName in usersConnected) {
-                if(usersConnected[enemyName].room == 'gameRoom1' && enemyName != killerName) {
-                    console.log(enemyName + ' est mort !');
-                    // On signale au joueur qu'il est mort afin de changer son statut
+            for(var deadPlayer in usersConnected) {
+                if(usersConnected[deadPlayer].room == 'gameRoom1' && deadPlayer != killerName) {
+                    deadPlayerName = deadPlayer;
+                    console.log(deadPlayerName + ' est mort !');
+                    // On signale au joueur qu'il est mort et qui l'a tué afin de changer son statut
                     socket.broadcast.emit('youAreDeadBro', killerName);
                 }
             }
             /* On incrémente le nombre de kills */ 
             db.query('UPDATE users SET kills = kills+1 WHERE LOGIN = ?', [killerName], 
             function(err, result) {
-                if (err) 
-                    console.log(err);
+                if (!err) 
+                    console.log(result);
             });   
-            // On incrémente la mort
-            db.query('UPDATE users SET deaths = deaths+1 WHERE LOGIN = ?', [enemyName], 
-            function(err, result) {
-                if (err) 
-                    console.log(err);
-            }); 
+            db.query('UPDATE users SET deaths = deaths+1 WHERE LOGIN = ?', [deadPlayerName], 
+                function(err, result) {
+                    if (!err) 
+                        console.log(result);
+            });  
         }
     });
-});
 
+});
 
 
 // On lance l'application

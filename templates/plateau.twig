@@ -86,11 +86,11 @@
         //test de solution pour entrer clavier
         (function(){
           // prend le frame rate optimal pour chaque navigateur
-            var requestAnimationFrame = window.mozRequestAnimationFrame    ||
+            /*var requestAnimationFrame = window.mozRequestAnimationFrame    ||
                 window.webkitRequestAnimationFrame ||
                 window.msRequestAnimationFrame     ||
                 window.oRequestAnimationFrame;
-                window.requestAnimationFrame = requestAnimationFrame;
+                window.requestAnimationFrame = requestAnimationFrame;*/
         })();
         
         // Evenements pour savoir quelles touches sont utilisées
@@ -354,7 +354,9 @@
               }
             }
             
-            /* Si un des deux joueurs est mort on affiche le message de ENDGAME */
+            /* Si un des deux joueurs est mort on affiche le message de ENDGAME 
+            Cela affiche aussi le EndGame lorsque un seul des deux joueurs est
+            dans la partie */
             if(!player1.alive || !player2.alive) {
               ctx.font = "50px smbFont";
               ctx.fillStyle = "#FFD700";
@@ -394,7 +396,7 @@
   <body>
     
    <canvas id="darioScene" width="800" height="600">canvas non supportés</canvas>
-   <audio src="/sound/mario.mp3" id="musique" autoplay loop controls></audio>
+   <!--<audio src="/sound/mario.mp3" id="musique" autoplay loop controls></audio>-->
    <!--<audio src="/sound/marioSaut.mp3" id='boing' style="display:none"></audio>-->
   </body>
 </html>
