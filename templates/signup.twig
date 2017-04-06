@@ -14,6 +14,8 @@
         <!-- TWIG INSTRUCTIONS BEGIN -->
         {%if (result == "ER_DUP_ENTRY") %}
             <script> alert("Ce login \"{{login}}\" est déjà pris !"); </script>
+        {%elseif (result == "wrongChars") %}
+            <p style="color: red;">Votre login contient des caractères interdits.</p>
         {%endif%}
         <!-- TWIG INSTRUCTIONS END -->
         <h1 style="text-align:center">Dario Battle</h1>

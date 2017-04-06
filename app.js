@@ -149,27 +149,41 @@ app.all('/signup', function(req, res) {
         
     // Stockage du nouveau compte
     else if(req.method == "POST") {
-        // Hashage du mot de passe de l'utilisateur
-        bcrypt.hash(req.body.password, saltRounds, function(err, hash) {
-            if (!err) {
-                // Insertion du login, hash du password et de la date de l'inscription
-                // du compte dans la base de données
-                db.query('INSERT INTO users VALUES (?, ?, 0, 0, 0, ?)', [ req.body.login, hash, d ],
-                function(err,result) {
-                    if(!err) {
-                        res.redirect('/userlist');
-                    }
-                    // Si le login existe déjà
-                    else if (err.code == "ER_DUP_ENTRY") {
-                        res.render('signup.twig', { 'result' : err.code, "login" : req.body.login });
-                    }
-                    // Sinon on affiche l'erreur
-                    else {
-                        console.log(err);
-                    }
-                });    
-            }    
-        });
+        var loginMatch = false;
+
+        // Vérifier qu'il y a les caractères que l'on autorise pour le login
+        /* Ce pattern vérifie que le login commence par au moins une lettre 
+        suivie de n lettres et/ou n chiffres. Au total la chaîne de caractère doit
+        fait au maximum 15 caractères */
+        const pattern = /^[a-zA-Z][a-zA-Z|0-9]{1,14}$/; 
+        var matchingChars = req.body.login.match(pattern);
+        
+        // Si l'utilisateur a rentré un login avec les caractères autorisés
+        if (matchingChars) {
+            // Hashage du mot de passe de l'utilisateur
+            bcrypt.hash(req.body.password, saltRounds, function(err, hash) {
+                if (!err) {
+                    // Insertion du login, hash du password et de la date de l'inscription
+                    // du compte dans la base de données
+                    db.query('INSERT INTO users VALUES (?, ?, 0, 0, 0, ?)', [ req.body.login, hash, d ],
+                    function(err,result) {
+                        if(!err) {
+                            res.redirect('/userlist');
+                        }
+                        // Si le login existe déjà
+                        else if (err.code == "ER_DUP_ENTRY") {
+                            res.render('signup.twig', { 'result' : err.code, "login" : req.body.login });
+                        }
+                        // Sinon on affiche l'erreur
+                        else {
+                            console.log(err);
+                        }
+                    });    
+                }    
+            });
+        }
+        else if (!matchingChars) 
+            res.render('signup.twig', { 'result' : "wrongChars", 'login' : req.body.login });
     }
 });
 
@@ -206,7 +220,6 @@ app.get('/userlist', function(req, res) {
     }
     else 
         res.redirect('/');
-    
 });
 
 /****************************************
@@ -468,13 +481,13 @@ io.sockets.on('connection', function(socket) {
             /* On incrémente le nombre de kills */ 
             db.query('UPDATE users SET kills = kills+1 WHERE LOGIN = ?', [killerName], 
             function(err, result) {
-                if (!err) 
-                    console.log(result);
+                if (err) 
+                    console.log(err);
             });   
             db.query('UPDATE users SET deaths = deaths+1 WHERE LOGIN = ?', [deadPlayerName], 
                 function(err, result) {
-                    if (!err) 
-                        console.log(result);
+                    if (err) 
+                        console.log(err);
             });  
         }
     });
