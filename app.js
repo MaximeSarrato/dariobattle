@@ -15,11 +15,12 @@ var io = require('socket.io')(server);
 var session = require('express-session');
 var twig = require("twig");
 var bodyParser = require('body-parser');
+const crypto = require('crypto');
 
 const sessionStorage = session({
     secret: 'M1n4$^T1r1th.',
     resave: false,
-    saveUninitialized: false
+    saveUninitialized: false,
 });
 
 // On configure le dossier contenant les templates
@@ -110,12 +111,16 @@ app.all('/', function (req, res) {
                                 games: rows[0].games, 
                                 kills: rows[0].kills,
                                 deaths: rows[0].deaths,
-                                sessionID: req.sessionID,
                                 statut: "ACCUEIL",
                                 adversaire: "NULL",
                                 socket: "NULL",
                                 wsId: "NULL",
                                 room: "NULL",
+                                /* Le LSID sera stocké dans le localStorage
+                                de l'utilisateur et permettra de savoir le pseudo
+                                du joueur qui a cet lsid en le comparant avec
+                                usersConnected */
+                                lsid: random(64)
                             };
                             res.redirect('/userlist');
                             console.log(usersConnected);
@@ -192,7 +197,8 @@ app.get('/userlist', function(req, res) {
     var i = 0; var connectes = [];
     // Si l'user a une variable de session 
     if (req.session.login) {
-
+    console.log(usersConnected);
+    
         /* On change les informations du joueur lors de son arrivée / retour dans l'accueil */
         usersConnected[req.session.login].statut = "ACCUEIL";
         usersConnected[req.session.login].room = "NULL";
@@ -203,6 +209,8 @@ app.get('/userlist', function(req, res) {
             connectes[i] = joueur;
             i++;
         }
+        
+        
         // Tri par nombre de kills et on envoie tous les joueurs ainsi que ceux qui sont co dans la page
         db.query('SELECT * FROM users ORDER BY kills DESC', function(err, rows) {
             /* On récupère les logins et on les met en minuscule afin que la comparaison
@@ -213,7 +221,11 @@ app.get('/userlist', function(req, res) {
             }
             // Si la requête réussit on envoie les tuples récupérés à userlist
             if (!err)
-                res.render('userlist.twig', { 'users' : rows, 'nom' : req.session.login, 'connectes' : connectes });
+                res.render('userlist.twig', { 
+                    'users' : rows, 
+                    'nom' : req.session.login, 
+                    'connectes' : connectes, 
+                    'localStorageId' : usersConnected[req.session.login].lsid });
         });
     }
     else 
@@ -282,6 +294,25 @@ app.all('/logout', function(req, res) {
         res.redirect('/');
 });
 
+/********************* 
+** FONCTIONS *********
+**********************/
+
+/* Fonction permettant de générer un id pour le localStorage */
+function random (howMany, chars) {
+    chars = chars 
+        || "abcdefghijklmnopqrstuwxyzABCDEFGHIJKLMNOPQRSTUWXYZ0123456789";
+    var rnd = crypto.randomBytes(howMany)
+        , value = new Array(howMany)
+        , len = chars.length;
+
+    for (var i = 0; i < howMany; i++) {
+        value[i] = chars[rnd[i] % len];
+    }
+
+    return value.join('');
+}
+
 /* Fonction permettant de récupérer l'id WebSocket d'un joueur */
 function getId(target) {
     return usersConnected[target].wsId;
@@ -310,26 +341,57 @@ function isUserConnected(user) {
     }
 }
 
+/* Fonction permettant de trouver un joueur par son localStorage id */
+function getPlayerByLsid(lsid) {
+    var playerFound = false;
+    console.log('lsid a tester : ' + lsid);
+    for (var player in usersConnected) {
+        console.log('Joueur à test = ' + player + ' son lsid : ' + usersConnected[player].lsid);
+        if(usersConnected[player].lsid == lsid) {
+            console.log('Joueur qui a ce lsid : ' + player);
+            playerFound = true;
+            return player;
+        }
+    }
+    if (!playerFound) {
+        return false
+    }
+}
+
 /****************************************
 ** GESTIONNAIRE SOCKET.IO ***************
 ****************************************/
 io.sockets.on('connection', function(socket) {
     // Lorsque un joueur arrive dans le lobby
-    socket.on('lobbyConnection', function(pseudo) {
-        // Stockage du socket et de l'id du socket dans les infos du joueur
-        if(isUserConnected(pseudo) && socket.id != undefined) {
-            usersConnected[pseudo].wsId = socket.id;
-            usersConnected[pseudo].socket = socket;
-            console.log(usersConnected);
-            socket.broadcast.emit('newPlayerAvailable', pseudo);
+    socket.on('lobbyConnection', function(lsid) {
+        console.log('lobbyConnection !');
+        var player = getPlayerByLsid(lsid);
+        // Si le lsid appartient bien à un joueur
+        if (player) {
+            console.log('player = ' + player);
+            // Stockage du socket et de l'id du socket dans les infos du joueur
+            if(isUserConnected(player) && socket.id != undefined) {
+                usersConnected[player].wsId = socket.id;
+                usersConnected[player].socket = socket;
+                console.log(usersConnected);
+                socket.broadcast.emit('newPlayerAvailable', player);
+            }
+            else 
+                console.log('Erreur, ce joueur n\'a pas de Websocket id');
         }
-        else 
-            console.log('Erreur, ce joueur n\'a pas de Websocket id');
+        /* Si le lsid du joueur qui rentre dans le lobby ne correspond pas
+        à son lsid dans usersConnected */
+        else {
+            console.log('player = ' + player);
+            socket.emit('destroySession');
+        }
     });
     
+    
     // Lorsque un joueur clique sur un joueur disponible dans le lobby
-    socket.on('clickOnPlayer', function(source, target) {
-        if(isUserConnected(target) && isUserConnected(target)) 
+    socket.on('clickOnPlayer', function(lsid, target) {
+        var source = getPlayerByLsid(lsid);
+        if(isUserConnected(source) && isUserConnected(target)) 
             console.log('Un clic sur le joueur ' + target + ' a été fait par ' + source + ' !');
         else
             console.log('ALERT : Modification de la page');
@@ -337,13 +399,14 @@ io.sockets.on('connection', function(socket) {
     
     // Lorsque un joueur clique sur un joueur puis sur une intéraction
     // dans le menu déroulant
-    socket.on('clickOnInteraction', function(source, interaction, target) {
-        console.log('source = ' + source + ' target = ' + target);
+    socket.on('clickOnInteraction', function(lsidSource, interaction, target) {
+        var sender = getPlayerByLsid(lsidSource);
+        console.log('source = ' + sender + ' target = ' + target);
         // On vérifie que les utilisateurs existent et sont connectés
-        if(isUserConnected(source) && isUserConnected(target)) {
+        if(isUserConnected(sender) && isUserConnected(target)) {
             // On stocke l'id WebSocket de la cible
             var idTarget = getId(target);
-            console.log('Source : ' + getId(source) + ' Target : ' + idTarget);
+            console.log('Source : ' + getId(sender) + ' Target : ' + idTarget);
             
             /* Intéraction d'envoi de message entre joueurs */
             if (interaction === "Envoyer un message") {
@@ -360,9 +423,9 @@ io.sockets.on('connection', function(socket) {
             else if (interaction === "Inviter à jouer") {
                 console.log('Invitation à jouer');
                 // Si le target à un id WebSocket et que le joueur n'essaie pas de s'inviter lui-même
-                if(idTarget != undefined && source.toLowerCase() != target.toLowerCase()) {
+                if(idTarget != undefined && sender.toLowerCase() != target.toLowerCase()) {
                     var message = ' vous invite a faire une partie.';
-                    socket.to(idTarget).emit('invitedToGame', source, message);
+                    socket.to(idTarget).emit('invitedToGame', sender, message);
                 }
                 
                 else {
@@ -372,22 +435,24 @@ io.sockets.on('connection', function(socket) {
             
             /* Si l'intéraction n'existe pas */
             else {
-                console.log('Le joueur ' + source + ' tente une intéraction inconnue vers ' + target);
+                console.log('Le joueur ' + sender + ' tente une intéraction inconnue vers ' + target);
             }
         }
 
     });
     
     // On envoie à la cible le message écrit dans le prompt 
-    socket.on('sendMessageFromPrompt', function(source, message, target) {
+    socket.on('sendMessageFromPrompt', function(lsid, message, target) {
+        var source = getPlayerByLsid(lsid);
         if (usersConnected[source] && usersConnected[target]) {
             socket.to(getId(target)).emit('sendMsg', source, message);
         }
     });
     
     // Invitation à jouer envoyée par sender et acceptée par le receiver
-    socket.on('acceptInvitation', function(sender, receiver) {
-        
+    socket.on('acceptInvitation', function(sender, lsid) {
+        var receiver = getPlayerByLsid(lsid);
+        console.log('Invitation par ' + sender);
         /* On vérifie que le sender et le receiver existent bien et sont bien connectés
         et qu'ils sont bien dans l'état "INGAME" */
         if (isUserConnected(sender) && isUserConnected(receiver)) {

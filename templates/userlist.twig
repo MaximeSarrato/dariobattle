@@ -14,6 +14,13 @@
             var currentPage = document.getElementsByClassName('home')[0];
             currentPage = currentPage.getElementsByTagName('a')[0];
             currentPage.classList.add('active');
+            // Si le joueur n'a pas de lsid ou vide on lui en donne un
+            if (localStorage.lsid == "" || !localStorage.lsid)
+                localStorage.setItem('lsid', '{{localStorageId}}');
+            
+            if (localStorage.login == "" || !localStorage.login)
+                localStorage.setItem('login', '{{nom}}');
+                
         </script>
         <!-- Liste de tous les membres -->
         <div class="members__block"> 
