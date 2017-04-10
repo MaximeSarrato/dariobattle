@@ -149,8 +149,6 @@ app.all('/signup', function(req, res) {
         
     // Stockage du nouveau compte
     else if(req.method == "POST") {
-        var loginMatch = false;
-
         // Vérifier qu'il y a les caractères que l'on autorise pour le login
         /* Ce pattern vérifie que le login commence par au moins une lettre 
         suivie de n lettres et/ou n chiffres. Au total la chaîne de caractère doit
@@ -282,11 +280,6 @@ app.all('/logout', function(req, res) {
     }
     else
         res.redirect('/');
-});
-
-/* Gestionnaire des pages inexistantes */
-app.all('*', function(req, res) {
-    res.redirect('/');
 });
 
 /* Fonction permettant de récupérer l'id WebSocket d'un joueur */
