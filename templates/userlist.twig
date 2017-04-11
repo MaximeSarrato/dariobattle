@@ -10,18 +10,16 @@
     </head>
     
     <body>
-        <script>
-            var currentPage = document.getElementsByClassName('home')[0];
-            currentPage = currentPage.getElementsByTagName('a')[0];
-            currentPage.classList.add('active');
-            // Si le joueur n'a pas de lsid ou vide on lui en donne un
-            if (localStorage.lsid == "" || !localStorage.lsid)
-                localStorage.setItem('lsid', '{{localStorageId}}');
-            
-            if (localStorage.login == "" || !localStorage.login)
-                localStorage.setItem('login', '{{nom}}');
-                
+        <script type="text/javascript">
+        /* On récupère le contenu des variables twigs dans les variables JS 
+        Les variables contiennent le localStorage identifier et le login du joueur */
+            var pInfo = {
+                login: {{nom |json_encode() | raw}},
+                lsid: {{localStorageId | json_encode() | raw}}
+            };
         </script>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src = "/js/userlist.js"></script>
         <!-- Liste de tous les membres -->
         <div class="members__block"> 
             <table id="stat">

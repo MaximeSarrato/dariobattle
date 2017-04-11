@@ -344,17 +344,14 @@ function isUserConnected(user) {
 /* Fonction permettant de trouver un joueur par son localStorage id */
 function getPlayerByLsid(lsid) {
     var playerFound = false;
-    console.log('lsid a tester : ' + lsid);
     for (var player in usersConnected) {
-        console.log('Joueur à test = ' + player + ' son lsid : ' + usersConnected[player].lsid);
         if(usersConnected[player].lsid == lsid) {
-            console.log('Joueur qui a ce lsid : ' + player);
             playerFound = true;
             return player;
         }
     }
     if (!playerFound) {
-        return false
+        return false;
     }
 }
 
@@ -362,13 +359,22 @@ function getPlayerByLsid(lsid) {
 ** GESTIONNAIRE SOCKET.IO ***************
 ****************************************/
 io.sockets.on('connection', function(socket) {
+    
+    // Le joueur arrive sur l'accueil
+    socket.on('homeConnection', function(lsid, login) {
+       console.log('Player connected is : ' + login + ' in theory his lsid equals : ' + lsid); 
+    });
+    
     // Lorsque un joueur arrive dans le lobby
     socket.on('lobbyConnection', function(lsid) {
         console.log('lobbyConnection !');
         var player = getPlayerByLsid(lsid);
         // Si le lsid appartient bien à un joueur
         if (player) {
-            console.log('player = ' + player);
+        socket.join('lobby', function() { 
+            console.log('Les rooms de ' + player + ' = ' + Object.keys(usersConnected[player].socket.rooms));
+        });            
+        console.log('player = ' + player);
             // Stockage du socket et de l'id du socket dans les infos du joueur
             if(isUserConnected(player) && socket.id != undefined) {
                 usersConnected[player].wsId = socket.id;
@@ -466,7 +472,13 @@ io.sockets.on('connection', function(socket) {
             usersConnected[receiver].statut = "INGAME";
             usersConnected[sender].adversaire = receiver;
             usersConnected[receiver].adversaire = sender;
-
+            
+            usersConnected[sender].socket.join('noobs', function() { 
+            console.log('Les rooms de ' + sender + ' = ' + Object.keys(usersConnected[sender].socket.rooms));
+        });
+            usersConnected[receiver].socket.join('noobs', function() { 
+            console.log('Les rooms de ' + receiver + ' = ' + Object.keys(usersConnected[receiver].socket.rooms));
+        });
             /* On incrémente le nombre de partie des deux joueurs */ 
             db.query('UPDATE users SET games = games+1 WHERE LOGIN = ?', [sender], 
             function(err, result) {
@@ -489,41 +501,37 @@ io.sockets.on('connection', function(socket) {
     });
     
     // Quand le joueur arrive dans la partie Dario Battle
-    socket.on('playerInGame', function(playerName) {
+    socket.on('playerInGame', function(lsid) {
         // Bug : besoin de join deux fois la salle pour pouvoir y être sans refresh
         // la page
-        if(isUserConnected(playerName))
-            usersConnected[playerName].socket.join('gameRoom1');
-    });
-    
-    // Le joueur demande une salle pour jouer
-    socket.on('needRoom', function(playerName) {
-        // Bug : besoin de join deux fois la salle pour 
-        // pouvoir y être sans refresh la page
-        if(isUserConnected(playerName)) {
-            usersConnected[playerName].socket.join('gameRoom1');
-            usersConnected[playerName].room = 'gameRoom1';
-            console.log('Rooms de ' + playerName + ' = ' + Object.keys(usersConnected[playerName].socket.rooms));
-            // Ce emit devrait être un emit vers la room mais fonctionne pas
-            socket.emit('roomHasBeenJoined', 'Tu as rejoint la salle !');
+        var player = getPlayerByLsid(lsid);
+        console.log('Player in game ! He is : ' + player);
+        if (isUserConnected(player) && player) {
+            usersConnected[player].socket.join('noobs', function() { 
+                console.log('Les rooms de ' + player + ' = ' + Object.keys(usersConnected[player].socket.rooms));
+            });
+            usersConnected[player].room = 'gameRoom1';
         }
+        socket.emit('roomHasBeenJoined', 'Tu as rejoint la salle !');
     });
     
     // Dés qu'un joueur bouge on envoie ses positions à l'autre joueur
-    socket.on('playerMoved', function(player, playerName) {
+    socket.on('playerMoved', function(player, lsid) {
+        var playerName = getPlayerByLsid(lsid);
         if(isUserConnected(playerName)) {
             for(var adversaire in usersConnected) {
                 if(usersConnected[adversaire].room == 'gameRoom1' && adversaire != playerName) {
                     socket.broadcast.emit('enemyIsHere', player);
+                    socket.to('noobs').emit('hey', 'girl I want your love');
                 }
             }
         }
     });
     
     // Lorsque un joueur est mort
-    socket.on('playerIsDead', function(killerName) {
+    socket.on('playerIsDead', function(killerLsid) {
         var deadPlayerName = '';
-        
+        var killerName = getPlayerByLsid(killerLsid);
         if(isUserConnected(killerName)) {
             /* On parcourt les utilisateurs connectés qui sont dans la salle gameRoom1
             Lorsque on tombe sur un joueur ayant un nom différent de killerName 
@@ -549,8 +557,8 @@ io.sockets.on('connection', function(socket) {
             });  
         }
     });
-
 });
+
 
 
 // On lance l'application
