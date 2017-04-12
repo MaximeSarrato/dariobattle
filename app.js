@@ -38,6 +38,9 @@ app
 // Objet qui va contenir les membres connectés
 var usersConnected = {};
 
+// All the rooms and informations associated
+var rooms = {};
+
 // Variables pour le hash des mots de passe
 var bcrypt = require('bcrypt');
 const saltRounds = 10;
@@ -198,7 +201,7 @@ app.get('/userlist', function(req, res) {
     // Si l'user a une variable de session 
     if (req.session.login) {
     console.log(usersConnected);
-    
+
         /* On change les informations du joueur lors de son arrivée / retour dans l'accueil */
         usersConnected[req.session.login].statut = "ACCUEIL";
         usersConnected[req.session.login].room = "NULL";
@@ -355,6 +358,60 @@ function getPlayerByLsid(lsid) {
     }
 }
 
+/* Count how many players are in a room */
+function countPlayersInRoom(roomName) {
+    // Room is an array containing sockets which are in the room
+    var rooms = io.sockets.adapter.rooms[roomName];
+    // The length of rooms permit to know how many players are in
+    console.log('Number of players in ' +  roomName + ' = ' + rooms.length);
+}
+
+function createRoom() {
+    console.log('------- CREATING ROOM -------')
+    var roomAlreadyIn = false;
+    var names = ['Triforce', 'Lichking', 'Cataclysm', 'Illidan', 'Arthas', 'Thrall', 'Orgrimmar'];
+    // Generating random number between 0 and the size of the names array
+    var cell = Math.floor(Math.random()*names.length);
+
+    var room = names[cell];
+    console.log(room);
+    
+    for (var i = 0; i < rooms.length; i++) {
+        if (rooms[i] === room) {
+            roomAlreadyIn = true;
+        }
+    }
+    
+    // If the name is not in the array then we can create the room
+    if (!roomAlreadyIn) {
+        rooms[room] = {
+            sockets: [],
+            playersInside: 0
+        };
+        return room;
+    }
+    // If a room has already that name, recalling creating function
+    // Problem is that names are limited for the moment, that will cause endless loop
+    else if (roomAlreadyIn) {
+        createRoom();
+    }
+}
+
+/* Search a not full room 
+rooms contains all the rooms
+room is the name of a room */
+function searchNotFullRoom() {
+    console.log('------- SEARCHING FOR A ROOM ------- ');
+    for(var room in rooms) {
+        if(rooms[room].playersInside <= 1) {
+            return room;
+        }
+    }
+    // If all existing rooms are full, we will create one
+    room = createRoom();
+    return room;
+}
+
 /****************************************
 ** GESTIONNAIRE SOCKET.IO ***************
 ****************************************/
@@ -362,10 +419,8 @@ io.sockets.on('connection', function(socket) {
     
     // Le joueur arrive sur l'accueil
     socket.on('homeConnection', function(lsid, login) {
-       console.log('Player connected is : ' + login + ' in theory his lsid equals : ' + lsid);
        var player = getPlayerByLsid(lsid);
        if (player) {
-           console.log('Player found !');
            usersConnected[player].socket = socket;
            usersConnected[player].wsId = socket.id;
            console.log(usersConnected);
@@ -381,19 +436,11 @@ io.sockets.on('connection', function(socket) {
         var player = getPlayerByLsid(lsid);
         // Si le lsid appartient bien à un joueur
         if (player) {
-        socket.join('lobby', function() { 
-            console.log('Les rooms de ' + player + ' = ' + Object.keys(usersConnected[player].socket.rooms));
-        });            
-        console.log('player = ' + player);
             // Stockage du socket et de l'id du socket dans les infos du joueur
-            if(isUserConnected(player) && socket.id != undefined) {
-                usersConnected[player].wsId = socket.id;
-                usersConnected[player].socket = socket;
-                console.log(usersConnected);
-                socket.broadcast.emit('newPlayerAvailable', player);
-            }
-            else 
-                console.log('Erreur, ce joueur n\'a pas de Websocket id');
+            usersConnected[player].wsId = socket.id;
+            usersConnected[player].socket = socket;
+            console.log(usersConnected);
+            socket.broadcast.emit('newPlayerAvailable', player);
         }
         /* Si le lsid du joueur qui rentre dans le lobby ne correspond pas
         à son lsid dans usersConnected */
@@ -482,13 +529,7 @@ io.sockets.on('connection', function(socket) {
             usersConnected[receiver].statut = "INGAME";
             usersConnected[sender].adversaire = receiver;
             usersConnected[receiver].adversaire = sender;
-            
-            usersConnected[sender].socket.join('noobs', function() { 
-            console.log('Les rooms de ' + sender + ' = ' + Object.keys(usersConnected[sender].socket.rooms));
-        });
-            usersConnected[receiver].socket.join('noobs', function() { 
-            console.log('Les rooms de ' + receiver + ' = ' + Object.keys(usersConnected[receiver].socket.rooms));
-        });
+
             /* On incrémente le nombre de partie des deux joueurs */ 
             db.query('UPDATE users SET games = games+1 WHERE LOGIN = ?', [sender], 
             function(err, result) {
@@ -517,15 +558,16 @@ io.sockets.on('connection', function(socket) {
         if (player) {
             usersConnected[player].socket = socket;
             usersConnected[player].wsId = socket.id;
-            usersConnected[player].socket.join('newbies', function() { 
+            var room = searchNotFullRoom();
+            usersConnected[player].socket.join(room, function() { 
                 console.log('Les rooms de ' + player 
                 + ' = ' + Object.keys(usersConnected[player].socket.rooms));
             });
-            usersConnected[player].room = 'newbies';
+            usersConnected[player].room = room;
+            rooms[room].playersInside += 1;
             console.log(usersConnected);
-            var rooms = io.sockets.adapter.rooms['newbies'];
-            console.log('Number of players in newbies room = ' + rooms.length);
-            io.in('newbies').emit('roomHasBeenJoined', player + ' a rejoint la salle "newbies"');
+            countPlayersInRoom(room);
+            io.in(room).emit('roomHasBeenJoined', player, room);
         }
         else {
             console.log('This user does not exists');
@@ -533,19 +575,19 @@ io.sockets.on('connection', function(socket) {
     });
     
     // Dés qu'un joueur bouge on envoie ses positions à l'autre joueur
-    socket.on('playerMoved', function(player, lsid) {
+    socket.on('playerMoved', function(player, lsid, room) {
         var playerName = getPlayerByLsid(lsid);
         if(isUserConnected(playerName)) {
             for(var adversaire in usersConnected) {
-                if(usersConnected[adversaire].room == 'newbies' && adversaire != playerName) {
-                    socket.to('newbies').emit('enemyIsHere', player);
+                if(usersConnected[adversaire].room == room && adversaire != playerName) {
+                    socket.to(room).emit('enemyIsHere', player);
                 }
             }
         }
     });
     
     // Lorsque un joueur est mort
-    socket.on('playerIsDead', function(killerLsid) {
+    socket.on('playerIsDead', function(killerLsid, room) {
         var deadPlayerName = '';
         var killerName = getPlayerByLsid(killerLsid);
         if(killerName) {
@@ -553,11 +595,11 @@ io.sockets.on('connection', function(socket) {
             Lorsque on tombe sur un joueur ayant un nom différent de killerName 
             alors c'est lui qui est mort */
             for(var deadPlayer in usersConnected) {
-                if(usersConnected[deadPlayer].room == 'newbies' && deadPlayer != killerName) {
+                if(usersConnected[deadPlayer].room == room && deadPlayer != killerName) {
                     deadPlayerName = deadPlayer;
                     console.log(deadPlayerName + ' est mort !');
                     // On signale au joueur qu'il est mort et qui l'a tué afin de changer son statut
-                    socket.to('newbies').emit('youAreDeadBro', killerName);
+                    socket.to(room).emit('youAreDeadBro', killerName);
                 }
             }
             /* On incrémente le nombre de kills */ 

@@ -12,8 +12,9 @@
         socket.emit('playerInGame', localStorage.lsid); 
         
         // Le serveur signale au joueur qu'il est bien dans la salle
-        socket.on("roomHasBeenJoined", function(message) {
-          console.log(message);
+        socket.on("roomHasBeenJoined", function(playerName, room) {
+          localStorage.room = room;
+          console.log('Le joueur ' + playerName + ' a rejoint la salle ' + '"' + room + '"');
         });
         
         // Quand un des deux joueurs est mort on redirige vers l'accueil
@@ -149,7 +150,7 @@
           ctx.clearRect(0, 0, canvas.width, canvas.height);
 
           // Envoyer en permanence au serveur les coordonnées et les états du personnage
-          socket.emit('playerMoved', player1, localStorage.lsid);
+          socket.emit('playerMoved', player1, localStorage.lsid, localStorage.room);
           
           /* Ce listener récupère les propriétés du joueur adverse que le serveur
              lui ait envoyé. Ces propriétés sont envoyées en permanence au serveur
@@ -336,7 +337,7 @@
                 /* On envoie l'évenement playerIsDead au serveur
                    avec le nom du compte qui l'a tué */
                 if(player1.alive && player2.alive) {   
-                  socket.emit('playerIsDead', localStorage.lsid);
+                  socket.emit('playerIsDead', localStorage.lsid, localStorage.room);
                   // On redirige les joueurs vers l'accueil quand la game est finie
                   setTimeout(redirectToHome, 3000);
                 }
