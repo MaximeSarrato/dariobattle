@@ -10,7 +10,6 @@ if (localStorage.login == "" || !localStorage.login)
 
 var socket = io.connect();
 
-console.log(pInfo.login + ' ' + pInfo.lsid);
 socket.emit('homeConnection', localStorage.lsid, localStorage.login);
 
 

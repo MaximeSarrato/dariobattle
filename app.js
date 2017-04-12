@@ -362,7 +362,17 @@ io.sockets.on('connection', function(socket) {
     
     // Le joueur arrive sur l'accueil
     socket.on('homeConnection', function(lsid, login) {
-       console.log('Player connected is : ' + login + ' in theory his lsid equals : ' + lsid); 
+       console.log('Player connected is : ' + login + ' in theory his lsid equals : ' + lsid);
+       var player = getPlayerByLsid(lsid);
+       if (player) {
+           console.log('Player found !');
+           usersConnected[player].socket = socket;
+           usersConnected[player].wsId = socket.id;
+           console.log(usersConnected);
+       }
+       else {
+           console.log('This player does not exists');
+       }
     });
     
     // Lorsque un joueur arrive dans le lobby
@@ -502,17 +512,24 @@ io.sockets.on('connection', function(socket) {
     
     // Quand le joueur arrive dans la partie Dario Battle
     socket.on('playerInGame', function(lsid) {
-        // Bug : besoin de join deux fois la salle pour pouvoir y être sans refresh
-        // la page
         var player = getPlayerByLsid(lsid);
         console.log('Player in game ! He is : ' + player);
-        if (isUserConnected(player) && player) {
-            usersConnected[player].socket.join('noobs', function() { 
-                console.log('Les rooms de ' + player + ' = ' + Object.keys(usersConnected[player].socket.rooms));
+        if (player) {
+            usersConnected[player].socket = socket;
+            usersConnected[player].wsId = socket.id;
+            usersConnected[player].socket.join('newbies', function() { 
+                console.log('Les rooms de ' + player 
+                + ' = ' + Object.keys(usersConnected[player].socket.rooms));
             });
-            usersConnected[player].room = 'gameRoom1';
+            usersConnected[player].room = 'newbies';
+            console.log(usersConnected);
+            var rooms = io.sockets.adapter.rooms['newbies'];
+            console.log('Number of players in newbies room = ' + rooms.length);
+            io.in('newbies').emit('roomHasBeenJoined', player + ' a rejoint la salle "newbies"');
         }
-        socket.emit('roomHasBeenJoined', 'Tu as rejoint la salle !');
+        else {
+            console.log('This user does not exists');
+        }
     });
     
     // Dés qu'un joueur bouge on envoie ses positions à l'autre joueur
@@ -520,9 +537,8 @@ io.sockets.on('connection', function(socket) {
         var playerName = getPlayerByLsid(lsid);
         if(isUserConnected(playerName)) {
             for(var adversaire in usersConnected) {
-                if(usersConnected[adversaire].room == 'gameRoom1' && adversaire != playerName) {
-                    socket.broadcast.emit('enemyIsHere', player);
-                    socket.to('noobs').emit('hey', 'girl I want your love');
+                if(usersConnected[adversaire].room == 'newbies' && adversaire != playerName) {
+                    socket.to('newbies').emit('enemyIsHere', player);
                 }
             }
         }
@@ -532,16 +548,16 @@ io.sockets.on('connection', function(socket) {
     socket.on('playerIsDead', function(killerLsid) {
         var deadPlayerName = '';
         var killerName = getPlayerByLsid(killerLsid);
-        if(isUserConnected(killerName)) {
+        if(killerName) {
             /* On parcourt les utilisateurs connectés qui sont dans la salle gameRoom1
             Lorsque on tombe sur un joueur ayant un nom différent de killerName 
             alors c'est lui qui est mort */
             for(var deadPlayer in usersConnected) {
-                if(usersConnected[deadPlayer].room == 'gameRoom1' && deadPlayer != killerName) {
+                if(usersConnected[deadPlayer].room == 'newbies' && deadPlayer != killerName) {
                     deadPlayerName = deadPlayer;
                     console.log(deadPlayerName + ' est mort !');
                     // On signale au joueur qu'il est mort et qui l'a tué afin de changer son statut
-                    socket.broadcast.emit('youAreDeadBro', killerName);
+                    socket.to('newbies').emit('youAreDeadBro', killerName);
                 }
             }
             /* On incrémente le nombre de kills */ 
@@ -555,6 +571,9 @@ io.sockets.on('connection', function(socket) {
                     if (err) 
                         console.log(err);
             });  
+        }
+        else {
+            console.log('This player does not exists');
         }
     });
 });
