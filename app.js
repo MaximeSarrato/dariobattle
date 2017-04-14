@@ -196,16 +196,17 @@ app.all('/signup', function(req, res) {
 /****************************************
 ** PAGE D'ACCUEIL ***********************
 ****************************************/
-app.get('/userlist', function(req, res) {
+app.all('/userlist', function(req, res) {
     var i = 0; var connectes = [];
     // Si l'user a une variable de session 
     if (req.session.login) {
-    console.log(usersConnected);
 
         /* On change les informations du joueur lors de son arrivée / retour dans l'accueil */
         usersConnected[req.session.login].statut = "ACCUEIL";
         usersConnected[req.session.login].room = "NULL";
         usersConnected[req.session.login].adversaire = "NULL";
+        
+        console.log(usersConnected);
         
         // Récupération des login des utilisateurs connectés
         for(var joueur in usersConnected) {
@@ -360,6 +361,7 @@ function getPlayerByLsid(lsid) {
 
 /* Count how many players are in a room */
 function countPlayersInRoom(roomName) {
+    console.log('------- COUNTING PLAYERS IN ROOM -------');
     // Room is an array containing sockets which are in the room
     var rooms = io.sockets.adapter.rooms[roomName];
     // The length of rooms permit to know how many players are in
@@ -367,7 +369,7 @@ function countPlayersInRoom(roomName) {
 }
 
 function createRoom() {
-    console.log('------- CREATING ROOM -------')
+    console.log('------- CREATING ROOM -------');
     var roomAlreadyIn = false;
     var names = ['Triforce', 'Lichking', 'Cataclysm', 'Illidan', 'Arthas', 'Thrall', 'Orgrimmar'];
     // Generating random number between 0 and the size of the names array
@@ -617,6 +619,11 @@ io.sockets.on('connection', function(socket) {
         else {
             console.log('This player does not exists');
         }
+    });
+    /* When the game is finished, do the player quit his room and decrement the
+    number of players in that room */
+    socket.on('removePlayerFromRoom', function (room) {
+        rooms[room].playersInside -= 1;
     });
 });
 
