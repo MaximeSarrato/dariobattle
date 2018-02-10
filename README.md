@@ -1,5 +1,4 @@
 # Dario Battle
----
 This is a Battle mode-like of Super Mario Bros game.  
 We did this as part of the AWS module taught at ISTY by Luca De Feo.  
 
@@ -9,7 +8,6 @@ with the help of the knowledge we have acquired now.
 Although we put this on GitHub to help some people to understand how a Web-Game is working.
 
 ### Technologies used
----
 - Socket.IO
 - MySQL
 - Twig as template engine
@@ -17,10 +15,8 @@ Although we put this on GitHub to help some people to understand how a Web-Game 
 - Front-End : HTML5, Vanilla Javascript
 
 ### Credits
----
 
 *Developed by Sébastien POIROT & Maxime SARRATO and tutored by Luca De Feo.*
 
 # Demo
----
 https://dariobattleapp.herokuapp.com
