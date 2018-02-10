@@ -1,14 +1,19 @@
 {
   "name": "aws-project",
   "author": {
-    "name": "Sarrato Maxime Poirot Sébastien"
+    "name": "Sarrato Maxime & Poirot Sébastien"
   },
-  "description": "Projet web : Dario Battle",
-  "homepage": "https://dario-project-maximesrt.c9users.io",
+  "description": "Dario Battle - A game-like battle mode of Super Mario Bros 2",
   "version": "0.1.0",
   "repository": {
     "type": "git",
     "url": ""
+  },
+  "scripts": {
+    "start": "node app.js"
+  },
+  "engines": {
+    "node": ">=0.10"
   },
   "dependencies": {
     "bcrypt": "^1.0.2",
@@ -26,7 +31,4 @@
     "socket.io": "^1.7.3",
     "twig": "^0.10"
   },
-  "engines": {
-    "node": ">=0.10"
-  }
 }
