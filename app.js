@@ -12,8 +12,8 @@ const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 
 const keys = require('./config/keys');
-const db = mysql.createConnection(keys.JAWSDB_URL);
 
+const db = mysql.createConnection(keys.JAWSDB_URL);
 
 // Testing database connection
 db.connect(err => {
@@ -23,11 +23,10 @@ db.connect(err => {
   console.log('connected as id ', db.threadId);
 });
 
-
 const port = process.env.PORT || 3000;
 
 const sessionStorage = session({
-  secret: 'M1n4$^T1r1th.',
+  secret: keys.sessionSecret,
   resave: false,
   saveUninitialized: false
 });
