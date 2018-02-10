@@ -1,6 +1,2 @@
-vendor
-composer.lock
-composer.phar
-php_errors.log
-npm-debug.log
-.c9
+node_modules
+dev.js
