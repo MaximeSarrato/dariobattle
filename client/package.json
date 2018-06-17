@@ -11,7 +11,8 @@
 		"build": "webpack --mode production",
 		"dev-server": "webpack-dev-server --mode development --open",
 		"test": "jest",
-		"test-watch": "jest --watchAll"
+		"test-watch": "jest --watchAll",
+		"heroku-postbuild": "npm run build"
 	},
 	"dependencies": {
 		"@material-ui/core": "^1.2.0",
