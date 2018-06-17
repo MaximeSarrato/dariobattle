@@ -2,7 +2,6 @@
 	"name": "Dario-Battle-App",
 	"version": "1.0.0",
 	"description": "Dario Battle",
-	"main": "index.js",
 	"author": "Maxime SARRATO",
 	"license": "MIT",
 	"private": true,
