@@ -17,6 +17,7 @@ export const startLogin = (username, password) => {
 			})
 			.catch(err => {
 				console.log(err.response.data);
+				alert(err.response.data);
 			});
 	};
 };
