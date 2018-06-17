@@ -5,7 +5,8 @@
 	"main": "index.js",
 	"engines": {
 		"node": "8.11.x",
-		"yarn": ">=1.7.0"
+		"yarn": ">=1.7.0",
+		"npm": ">=6.1.0"
 	},
 	"repository": "git@github.com:MaximeSarrato/dariobattle.git",
 	"author": "Maxime Sarrato <maxime.sarrato@gmail.com>",
@@ -16,7 +17,7 @@
 		"dev": "node index.js",
 		"dev-watch": "nodemon index.js",
 		"debug": "DEBUG=express-session nodemon index.js",
-		"heroku-postbuild": "yarn install --prefix client"
+		"heroku-postbuild": "yarn install --prefix client && npm run build --prefix client"
 	},
 	"dependencies": {
 		"bcrypt": "^2.0.1",
