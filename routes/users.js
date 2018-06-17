@@ -50,6 +50,7 @@ router.post('/username', isAuthenticated, async (req, res) => {
 });
 
 router.post('/signup', async (req, res) => {
+	const saltRounds = 10;
 	const { username, password } = req.body;
 	if (!username || !password) {
 		return res.status(403).send({ error: 'Invalid form submission.' });
@@ -64,7 +65,7 @@ router.post('/signup', async (req, res) => {
 			return res.status(404).send({ error: 'This token does not exist.' });
 		}
 		console.log('user: ', user);
-		const hash = await bcrypt.hash(password, keys.saltRounds);
+		const hash = await bcrypt.hash(password, saltRounds);
 		// Add credentials to existing user
 		user.username = username;
 		user.password = hash;
@@ -82,7 +83,7 @@ router.post('/signup', async (req, res) => {
 				.send('This username is already taken. Please choose another! :)');
 		}
 		// Hash password
-		bcrypt.hash(password, keys.saltRounds).then(hash => {
+		bcrypt.hash(password, saltRounds).then(hash => {
 			// Create new user
 			const user = new User({
 				username,
