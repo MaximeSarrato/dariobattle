@@ -4,7 +4,8 @@
 	"version": "1.0.0",
 	"main": "index.js",
 	"engines": {
-		"node": "8.11.x"
+		"node": "8.11.x",
+		"yarn": ">=1.7.0"
 	},
 	"repository": "git@github.com:MaximeSarrato/dariobattle.git",
 	"author": "Maxime Sarrato <maxime.sarrato@gmail.com>",
