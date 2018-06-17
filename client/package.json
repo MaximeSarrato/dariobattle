@@ -8,11 +8,10 @@
 	"scripts": {
 		"build-watch": "webpack --watch --mode development",
 		"build-dev": "webpack --mode development",
-		"build": "webpack --mode production",
+		"build": "yarn run webpack --mode production",
 		"dev-server": "webpack-dev-server --mode development --open",
 		"test": "jest",
-		"test-watch": "jest --watchAll",
-		"heroku-postbuild": "npm run build"
+		"test-watch": "jest --watchAll"
 	},
 	"dependencies": {
 		"@material-ui/core": "^1.2.0",
