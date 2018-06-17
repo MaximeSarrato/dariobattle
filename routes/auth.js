@@ -30,7 +30,7 @@ router.get(
 	(req, res) => {
 		console.log('GET /auth/google/callback');
 
-		res.redirect('http://localhost:9000/dashboard');
+		res.redirect('http://localhost/dashboard');
 	}
 );
 
