@@ -9,7 +9,7 @@
 	"scripts": {
 		"build-watch": "webpack --watch --mode development",
 		"build-dev": "webpack --mode development",
-		"build": "yarn webpack --mode production",
+		"build": "webpack --mode production",
 		"dev-server": "webpack-dev-server --mode development --open",
 		"test": "jest",
 		"test-watch": "jest --watchAll"

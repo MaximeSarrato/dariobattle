@@ -15,8 +15,7 @@
 		"start": "node index.js",
 		"dev": "node index.js",
 		"dev-watch": "nodemon index.js",
-		"debug": "DEBUG=express-session nodemon index.js",
-		"heroku-postbuild": "cd client && yarn && yarn run build"
+		"debug": "DEBUG=express-session nodemon index.js"
 	},
 	"dependencies": {
 		"cors": "^2.8.4",
