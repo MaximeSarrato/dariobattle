@@ -1,0 +1,37 @@
+{
+	"name": "dariobattle",
+	"description": "",
+	"version": "1.0.0",
+	"main": "index.js",
+	"engines": {
+		"node": "8.11.x"
+	},
+	"repository": "git@github.com:MaximeSarrato/dariobattle.git",
+	"author": "Maxime Sarrato <maxime.sarrato@gmail.com>",
+	"license": "MIT",
+	"private": true,
+	"scripts": {
+		"start": "node index.js",
+		"dev": "node index.js",
+		"dev-watch": "nodemon index.js",
+		"debug": "DEBUG=express-session nodemon index.js",
+		"heroku-postbuild": "cd client && yarn && yarn run build"
+	},
+	"dependencies": {
+		"cors": "^2.8.4",
+		"express": "^4.16.3",
+		"express-session": "^1.15.6",
+		"jwt-simple": "^0.5.1",
+		"moment": "^2.22.1",
+		"mongoose": "^5.0.16",
+		"passport": "^0.4.0",
+		"passport-google-oauth": "^1.0.0",
+		"socket.io": "^2.1.1"
+	},
+	"devDependencies": {
+		"eslint": "^4.19.1",
+		"eslint-config-airbnb-base": "^12.1.0",
+		"eslint-plugin-import": "^2.12.0",
+		"nodemon": "^1.17.3"
+	}
+}
