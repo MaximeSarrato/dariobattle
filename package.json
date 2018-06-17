@@ -15,7 +15,8 @@
 		"start": "node index.js",
 		"dev": "node index.js",
 		"dev-watch": "nodemon index.js",
-		"debug": "DEBUG=express-session nodemon index.js"
+		"debug": "DEBUG=express-session nodemon index.js",
+		"heroku-postbuild": "NPM_CONFIG_PRODUCTION=false yarn --prefix client && build --prefix client"
 	},
 	"dependencies": {
 		"bcrypt": "^2.0.1",
