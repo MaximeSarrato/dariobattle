@@ -6,43 +6,43 @@ import { connect } from 'react-redux';
 import { joinChat } from '../actions/chat';
 
 class Dashboard extends React.Component {
-  constructor(props) {
-    super(props);
+	constructor(props) {
+		super(props);
 
-    this.state = {
-      open: false
-    };
-  }
+		this.state = {
+			open: false
+		};
+	}
 
-  componentDidMount() {
-    this.props.joinChat(this.props.username);
-  }
+	componentDidMount() {
+		this.props.joinChat(this.props.username);
+	}
 
-  handleClick = () => {
-    this.setState({ open: !this.state.open });
-  };
+	handleClick = () => {
+		this.setState({ open: !this.state.open });
+	};
 
-  render() {
-    console.log(this.state);
-    console.log(this);
-    return (
-      <div>
-        <h1>Dashboard</h1>
-        <ChatSidebar />
-      </div>
-    );
-  }
+	render() {
+		console.log(this.state);
+		console.log(this);
+		return (
+			<div>
+				<h1>Dashboard</h1>
+				<ChatSidebar />
+			</div>
+		);
+	}
 }
 
 const mapStateToProps = state => ({
-  username: state.auth.username
+	username: state.auth.username
 });
 
 const mapDispatchToProps = dispatch => ({
-  joinChat: username => dispatch(joinChat(username))
+	joinChat: username => dispatch(joinChat(username))
 });
 
 export default connect(
-  mapStateToProps,
-  mapDispatchToProps
+	mapStateToProps,
+	mapDispatchToProps
 )(Dashboard);

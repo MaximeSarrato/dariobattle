@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import cookie from 'react-cookie';
-import App from './App';
+import App from './components/App';
 import configureStore from './store/configureStore';
 import { startLoginWithTokenOrSID } from './actions/auth';
 import './styles/main.scss';
