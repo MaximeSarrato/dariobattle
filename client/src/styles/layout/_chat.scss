@@ -1,42 +1,70 @@
+//
+//
+
+.discussions {
+	position: fixed;
+	bottom: 0;
+	right: 14rem;
+	display: flex;
+	flex-direction: row-reverse;
+	justify-content: space-around;
+	// overflow: hidden;
+}
+
+.discussion {
+	background-color: #fff;
+	width: 10rem;
+	padding: 5px 2px;
+	margin: 0 5px;
+	border: 1px solid rgba(0, 0, 0, 0.12);
+	font-size: 0.8rem;
+
+	&:hover {
+		cursor: pointer;
+		background-color: darken(#fff, 5%);
+	}
+}
+
 .chat {
-  width: 12.5rem;
-  position: fixed;
-  bottom: 0;
-  right: 0;
-  // padding: 10px 5px;
-  text-decoration: none;
-  background-color: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.12);
+	width: 12.5rem;
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	// padding: 10px 5px;
+	text-decoration: none;
+	background-color: #fff;
+	border: 1px solid rgba(0, 0, 0, 0.12);
 
-  &__users {
-  }
+	&__users {
+	}
 
-  ul {
-    display: flex;
-    flex-direction: column;
-    flex-wrap: wrap;
-    list-style-type: none;
-    padding-left: 0;
-  }
+	ul {
+		display: flex;
+		flex-direction: column;
+		flex-wrap: wrap;
+		list-style-type: none;
+		padding-left: 0;
+	}
 
-  &__item {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
-    padding: 5px 2px;
-  }
+	&__item {
+		border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+		padding: 5px 2px;
+	}
 
-  &__summary {
-    text-align: center;
+	&__summary {
+		float: left;
+		text-align: center;
 
-    &__btn {
-      width: 100%;
-    }
-    &__btn:focus {
-      outline: none;
-    }
-  }
+		&__btn {
+			width: 100%;
+		}
+		&__btn:focus {
+			outline: none;
+		}
+	}
 
-  &__item:hover {
-    cursor: pointer;
-    background-color: rgba(0, 0, 0, 0.08);
-  }
+	&__item:hover {
+		cursor: pointer;
+		background-color: rgba(0, 0, 0, 0.08);
+	}
 }

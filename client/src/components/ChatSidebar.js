@@ -3,13 +3,15 @@ import Button from '@material-ui/core/Button';
 import { connect } from 'react-redux';
 import { subscribeToUsers } from '../sockets';
 import ChatSidebarList from './ChatSidebarList';
+import DiscussionListItem from './DiscussionListItem';
 
 class ChatSidebar extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
 			open: false,
-			btnText: 'Loading...'
+			btnText: 'Loading...',
+			discussions: []
 		};
 
 		subscribeToUsers(this.props.dispatch);
@@ -29,19 +31,39 @@ class ChatSidebar extends React.Component {
 		this.setState({ open: !this.state.open });
 	};
 
+	handleOpenNewDiscussion = username => {
+		console.log('Should open new discussion with ' + username);
+		// if (this.state.discussions.indexOf(username) === -1) {
+		this.setState({
+			discussions: [...this.state.discussions, username]
+		});
+		// }
+	};
+
 	render() {
-		// console.log('this.state: ', this.state);
+		console.log('this.state: ', this.state);
 		// console.log(this.props);
 		// console.log('this.props.users: ', this.props.users);
 		return (
-			<div className="chat">
-				{this.state.open && (
-					<div className="chat__users">
-						<ChatSidebarList items={this.props.users} />
+			<div>
+				<div className="discussions">
+					{this.state.discussions.length >= 1 &&
+						this.state.discussions.map(discussion => (
+							<DiscussionListItem destName={discussion} />
+						))}
+				</div>
+				<div className="chat">
+					{this.state.open && (
+						<div className="chat__users">
+							<ChatSidebarList
+								handleOpenNewDiscussion={this.handleOpenNewDiscussion}
+								items={this.props.users}
+							/>
+						</div>
+					)}
+					<div onClick={this.handleClick} className="chat__summary">
+						<Button className="chat__summary__btn">{this.state.btnText}</Button>
 					</div>
-				)}
-				<div onClick={this.handleClick} className="chat__summary">
-					<Button className="chat__summary__btn">{this.state.btnText}</Button>
 				</div>
 			</div>
 		);
