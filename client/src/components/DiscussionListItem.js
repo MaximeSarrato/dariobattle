@@ -1,7 +1,7 @@
 import React from 'react';
 
 const DiscussionListItem = props => (
-	<div key={props.destName} className="discussion">
+	<div className="discussion__item">
 		<span>{props.destName}</span>
 	</div>
 );

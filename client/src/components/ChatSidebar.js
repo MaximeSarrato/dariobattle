@@ -3,7 +3,7 @@ import Button from '@material-ui/core/Button';
 import { connect } from 'react-redux';
 import { subscribeToUsers } from '../sockets';
 import ChatSidebarList from './ChatSidebarList';
-import DiscussionListItem from './DiscussionListItem';
+import Discussion from './Discussion';
 
 class ChatSidebar extends React.Component {
 	constructor(props) {
@@ -46,12 +46,9 @@ class ChatSidebar extends React.Component {
 		// console.log('this.props.users: ', this.props.users);
 		return (
 			<div>
-				<div className="discussions">
-					{this.state.discussions.length >= 1 &&
-						this.state.discussions.map(discussion => (
-							<DiscussionListItem destName={discussion} />
-						))}
-				</div>
+				{this.state.discussions.length >= 1 && (
+					<Discussion items={this.state.discussions} />
+				)}
 				<div className="chat">
 					{this.state.open && (
 						<div className="chat__users">
