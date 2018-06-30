@@ -8,20 +8,35 @@
 	display: flex;
 	flex-direction: row-reverse;
 	justify-content: space-around;
-	// overflow: hidden;
+	overflow: hidden;
+	&__label {
+		background-color: $color-grey;
+		color: #fff;
+		width: 100%;
+		padding: 5px 2px;
+		margin: 0 auto;
+		border: 1px solid rgba(0, 0, 0, 0.12);
+		font-size: 0.8rem;
+		&:hover {
+			cursor: pointer;
+			background-color: darken($color-grey, 5%);
+		}
+	}
 }
 
 .discussion__item {
-	background-color: #fff;
 	width: 10rem;
-	padding: 5px 2px;
+	height: 100%;
+	align-self: flex-end;
+	background-color: #fff;
 	margin: 0 5px;
 	border: 1px solid rgba(0, 0, 0, 0.12);
 	font-size: 0.8rem;
 
-	&:hover {
-		cursor: pointer;
-		background-color: darken(#fff, 5%);
+	&__input {
+		border: none;
+		width: 100%;
+		border-bottom: 1px solid rgba(0, 0, 0, 0.12);
 	}
 }
 

@@ -38,11 +38,7 @@ const mapStateToProps = state => ({
 	username: state.auth.username
 });
 
-const mapDispatchToProps = dispatch => ({
-	joinChat: username => dispatch(joinChat(username))
-});
-
 export default connect(
 	mapStateToProps,
-	mapDispatchToProps
+	{ joinChat }
 )(Dashboard);
