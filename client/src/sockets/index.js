@@ -1,13 +1,17 @@
 import io from 'socket.io-client';
+let ioURL = window.document.location.origin;
+if (ioURL.indexOf('9000')) {
+	ioURL = ioURL.replace('9000', '3000');
+}
 import { joinChat, populateUsers } from '../actions/chat';
-const socket = io('http://localhost:3000');
+const socket = io(ioURL);
 
 // Listen on getUsers socket message
 // and populate store with connected users
 export const subscribeToUsers = dispatch => {
-  socket.on('getUsers', users => {
-    return dispatch(populateUsers(users));
-  });
+	socket.on('getUsers', users => {
+		return dispatch(populateUsers(users));
+	});
 };
 
 // const setupSocket = (dispatch, username) => {

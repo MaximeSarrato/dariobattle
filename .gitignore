@@ -1,2 +1,6 @@
 node_modules
-dev.js
+# Environment variables
+.env
+yarn-error.log
+# Production directory
+/dist
