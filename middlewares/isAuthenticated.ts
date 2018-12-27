@@ -7,6 +7,7 @@ export const isAuthenticated = (req: Request, res: Response, next: NextFunction)
   // If user got jwt in his session it means he has been authenticated by
   // Google or other provider and he needs to receive a token and
   // his profile data
+
   if (req.session.jwt) {
     token = req.session.jwt;
   }
@@ -15,6 +16,7 @@ export const isAuthenticated = (req: Request, res: Response, next: NextFunction)
     const error = 'You are not authenticated. Redirect to login...';
     return res.status(403).send({ error });
   }
+
   User.findOne({ token }).then(user => {
     if (!user) {
       return res.status(404).send({ error: 'This token does not exist.' });

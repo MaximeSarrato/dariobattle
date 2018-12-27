@@ -1,23 +1,15 @@
-# Dario Battle
-This is a Battle mode-like of Super Mario Bros game.  
-We did this as part of the AWS module taught at ISTY by Luca De Feo.  
+# [Dario Battle](https://dariobattle.herokuapp.com) &middot; [![Coverage Status](https://coveralls.io/repos/github/MaximeSarrato/dariobattle/badge.svg?branch=feature%2Fci)](https://coveralls.io/github/MaximeSarrato/dariobattle?branch=feature%2Fci) [![Build Status](https://travis-ci.org/MaximeSarrato/dariobattle.svg?branch=master)](https://travis-ci.org/MaximeSarrato/dariobattle)
 
-All the images, sounds, videos are the property of &copy;Nintendo.  
-We know that the code isn't clean at all, we should rework this project to do something better
-with the help of the knowledge we have acquired now.   
-Although we put this on GitHub to help some people to understand how a Web-Game is working.
-
-### Technologies used
----
-- Socket.IO
-- MySQL
-- Twig as template engine
-- Back-end : Node.js with the Express framework
-- Front-End : HTML5, Vanilla Javascript
-
-### Credits
----
-*Developed by Sébastien POIROT & Maxime SARRATO and tutored by Luca De Feo.*
+Dario Battle is a web application which allow to play to a battle mode like the one that was in the game Super Mario Bros 2.
 
 # Demo
+
+Current version of Dario Battle : 
+https://dariobattle.herokuapp.com  
+*The game is not yet implemented on the new version.*
+
+**OR** 
+
+
+The old one, developed at school by Sébastien POIROT & Maxime SARRATO and tutored by Luca De Feo during the AWS course.
 https://dariobattleapp.herokuapp.com
