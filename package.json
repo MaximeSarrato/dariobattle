@@ -19,6 +19,7 @@
     "build": "tsc",
     "test": "jest",
     "test-coverage": "jest --coverage",
+    "coveralls": "jest --coverage && cat ./coverage/lcov.info | coveralls",
     "heroku-postbuild": "cd client && yarn install --production=false && yarn run build"
   },
   "dependencies": {
@@ -48,6 +49,7 @@
     "@types/passport-google-oauth2": "^0.1.2",
     "@types/sinon": "^7.0.2",
     "@types/supertest": "^2.0.7",
+    "coveralls": "^3.0.2",
     "eslint": "^4.19.1",
     "eslint-config-airbnb-base": "^12.1.0",
     "eslint-plugin-import": "^2.12.0",
