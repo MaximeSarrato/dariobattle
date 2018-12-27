@@ -1,8 +1,8 @@
-const mongoose = require('mongoose');
-const User = mongoose.model('users');
+import { Request, Response, NextFunction } from 'express';
+import User from '../models/User';
 
 // @TODO Need to check if duration is expired
-const isAuthenticated = (req, res, next) => {
+export const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
   let token = req.header('X-Auth');
   // If user got jwt in his session it means he has been authenticated by
   // Google or other provider and he needs to receive a token and
@@ -23,4 +23,3 @@ const isAuthenticated = (req, res, next) => {
     next();
   });
 };
-module.exports = isAuthenticated;
