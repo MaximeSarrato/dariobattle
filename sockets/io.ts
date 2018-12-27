@@ -1,14 +1,20 @@
-const socketIO = require('socket.io');
+import * as socketIO from 'socket.io';
+
+type Users = {
+  [key: string]: {
+    socketID: string;
+  };
+};
 
 // An object of nested objects
 // ex : { Max: { socketID: '123' } }
-const users = {};
+const users: Users = {};
 
-module.exports.listen = server => {
+export const listen = server => {
   const io = socketIO(server);
 
   io.on('connection', socket => {
-    socket.on('joinChat', username => {
+    socket.on('joinChat', (username: string) => {
       if (!Object.keys(users).includes(username)) {
         users[username] = {
           socketID: socket.id

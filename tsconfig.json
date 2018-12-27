@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "target": "es2018",
+    "module": "commonjs",
+    "outDir": "dist",
+    "resolveJsonModule": true
+  },
+  "include": ["**/*.ts", "server.js"],
+  "exclude": ["node_modules"]
+}
