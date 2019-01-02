@@ -2,7 +2,7 @@
   "name": "dariobattle",
   "description": "",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "dist/server.js",
   "engines": {
     "node": ">=8.15.x",
     "yarn": ">=1.7.0",
@@ -20,7 +20,7 @@
     "test": "jest",
     "test-coverage": "jest --coverage",
     "coveralls": "jest --coverage && cat ./coverage/lcov.info | coveralls",
-    "heroku-postbuild": "cd client && yarn install --production=false && yarn run build"
+    "heroku-postbuild": "yarn run build && cd client && yarn install --production=false && yarn run build"
   },
   "dependencies": {
     "bcrypt": "^2.0.1",
