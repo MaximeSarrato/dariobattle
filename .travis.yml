@@ -12,3 +12,9 @@ cache:
 script:
   - yarn test
   - yarn run coveralls
+deploy:
+  provider: heroku
+  api_key:
+    secure: El8Qpwvp3dlZCdIl3EFoQRTmDuL8C0Hdv0stPsWDdPn06Ew2VH/aAwDmysJUtmYUuXPDvo5z12c5cnRoaGrhfhGIzUjBLSu4E2zK5VTR4M+z+aKvbyEib1WNQvbqpr6TIz2ZLqWd34hzhzfAJRiBQCTiRdEts0hZbcZROH+vPObWVhhhR0yX2WW5P4bMyC81z7kFK60OqwFBHxuO+uVF0Gf6efHGA+7//ZynywzliacFQL01ZqFGdHeDFpwkwIw907j6TwZq0FRtJrWEUSqY+hpYPw7FfCU/v2lZ+Pz2aniBia5J/IcObSR7XQgVCQwoS8DL2Ea3OCsdQDVk2X06TOvQFIy6G0NtAPgKtw2Jn/tH+b05PFoZbOEzXKlVF78SZPbwB8b3r+D1F57TGl45wPrvvPesDerqLunPM+xNd7A6upAN0eGb2uznoXZ7Y69nlNBBTKUEAb+8UQTfvX8A/ns7mwV0XzRh8VPMToJqsjky96MQvvszZhm5oqyJDbPh5sP6UVeXthPxVtfMpYY0HERyfC9fWwYz0tTl+8Rg9gJ5MMwJlmUDhnfvf69XLU0MgaD8nX3fJ652UfezOq4C2NhcNUEhL0nCdnaLQdhzzQPudWG5D4kdCR9ksMnxMDLyP6iMGqoDNXtpvyaXi2kfS32eznsBTJ/+bCJ5qCqQD1o=
+  on:
+    branch: master
