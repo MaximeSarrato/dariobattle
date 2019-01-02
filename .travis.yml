@@ -1,17 +1,20 @@
 language: node_js
 node_js:
-  - '8'
+- "8"
 sudo: false
 before_install:
-  - curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 1.12.3
-  - export PATH=$HOME/.yarn/bin:$PATH
+- curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 1.12.3
+- export PATH=$HOME/.yarn/bin:$PATH
 install:
-  - yarn install
+- yarn install
 cache: yarn
 script:
-  - yarn test
-  - yarn run coveralls
+- yarn test
+- yarn run coveralls
 deploy:
   provider: heroku
   api_key:
-    secure: "NywKU5pGUW2RJ/NUWEQFpnU1LBGW0sYhUQTzhwk7JUI3G7r6TCFOUXfUIOi8c711zxM924qfy7Xq5g5arjipk0MVRYi3j/KDY2Kg8qLyP1JETx2p9qiEdmTXQnMJvl+VnsbzkAz6odPSudr5cnV4i13DN6IGkaYCt4rcM8I0GxgLQn+nxPFADaeOnWWVEHjSC4dDS8LuY6vrN7rpRw5udzYg6EBKJVHf/tY1mSy8PjZizRStDHH9Fx00II1uqA5+pJK3FijUnBsKDTt6KOHoG8qudBFYYrrvOw9RQd1ZFZmIucV2wyl770MxKNNGIH/U2o3etUTM+dEkoldcVhgBntSoj1PtojGzQK+f+6lvVFeFlVz+qOqfFMphebp5QJ8mt0+1DlbW7kZI82KZiQlBBLD46Ikn15KmvI0cqNe7HXQRQ6XMwJ3ZSQvl4ovuPN/QKNXCImEiDpqOhAch1M5KaM20VM2yT/Cc4cIl1Kwz66GBsGSSjj1OXtnT6sFIY15pVw5hV2aeDMk/Vh0ycJsLJPtsUklu+/BO/ncE+pESpStss0L85f+5kpcddUZQy9VqEUwnTBIV+Z8+zgB5NzZDlWp/GiL23TwORKevYpfjUlI9JgAWqAqp1nMX2xxX2SY21eWC0u0xQB3LmtU6wC9wyX15+GFv0arjVydUgceURjg="
+    secure: LDnBp41UCLU//oQYyAk0u8klxcu0oWToSZ4nsEB5/2tP9cMk/9iOIfu29zFqKtvfXx+46pi2vfbY3oNbSMA15L2LjmX7WVg66jfOcChzASikbqKydD6VQKPdcTzbOu5YnKX1ZbIQSVU+bUUR5+0DO/1NAmgux4RABsHpqj+bu31XuIOC8bqQuOOfU5HTPGh46uwMhcyhFC+c/OYKlg1HrfxopZkbtarmX94lpNAMqP27Bqckv8/d2W5brXS/Y6cZEhZRpLjDauRMUe+4XNyZLPJiaE3XEJwaWb5SSeNSfC/6/VqFGF/FdSvalxBH85gBxq8ZIelq7eYXPl4b6kA4QbzxHXKRpb8A6aUpHS3JTRkUjXsAeldcLFCKIxR+HsuU4ceYNktipqimawAJRxbWKb7o6Fw0SaRxyKQ+HVbAii1HOIVb+thyI8bh8DBHBoDRv2MoOskgvttiOxa3RrFSnkU+VjDm2PHX1gdy1DceqOR2okf+6xP5spbJcF1c+hy0vXOUnVjm6uIEf4r21LnKKj75gvbWeDjNS7W6RAZmPmzNAtyk6p7KSHONNNpo/gUy2sCcaXmk3io4rRA5zwjipA/TFEkDpJtkTA4rsvrT2nvpR5x1iRD3HpopVy2vQAaEWr/J+DLiaNn+aQjODn5we/VxEL3VKQ/FX8bAOxE6Hgs=
+  app: dariobattle
+  on: 
+    branch: master
