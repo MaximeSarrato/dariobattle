@@ -20,8 +20,8 @@
     "debug": "DEBUG=express-session nodemon index.js",
     "build": "tsc",
     "test": "jest --detectOpenHandles --forceExit",
-    "test-coverage": "jest --coverage",
-    "coveralls": "jest --coverage && cat ./coverage/lcov.info | coveralls",
+    "test-coverage": "yarn run test --coverage",
+    "coveralls": "yarn run test --coverage && cat ./coverage/lcov.info | coveralls",
     "heroku-postbuild": "cd client && yarn install --production=false && yarn run build"
   },
   "dependencies": {
