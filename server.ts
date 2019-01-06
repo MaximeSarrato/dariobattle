@@ -15,14 +15,26 @@ mongoose.connect(
   { useNewUrlParser: true },
 );
 
-// Socket.IO
-const wsServer = new WebSocketServer(server);
-wsServer.listen();
+if (process.env.NODE_ENV !== 'test') {
+  // Socket.IO
+  const wsServer = new WebSocketServer(server);
+  wsServer.listen();
 
-server.listen(process.env.PORT, () => {
-  logger.info(`Server is listening on port ${process.env.PORT}`);
+  server.listen(process.env.PORT, () => {
+    logger.info(`Server is listening on port ${process.env.PORT}`);
+  });
+}
+
+/**
+ * Shutdown the server when system detects SIGINT
+ */
+process.on('SIGINT', () => {
+  server.close();
+  process.exit();
 });
 
 server.on('close', () => {
   logger.info('Server has been stopped.');
 });
+
+export default server;
