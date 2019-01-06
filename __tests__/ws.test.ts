@@ -21,6 +21,7 @@ beforeAll((done) => {
 
 afterAll((done) => {
   httpServer.close();
+  ioServer.close();
   done();
 });
 
@@ -55,18 +56,18 @@ describe('WebSocket server tests', () => {
     }, 50);
   });
 
-  // it('checks if a user has disconnect', (done) => {
-  //   wsClient.emit('joinChat', username);
-  //   setTimeout(() => {
-  //     const users = wsServer.getUsers();
-  //     expect(Object.keys(users).length).toBe(1);
-  //     // Disconnect the sockext
-  //     wsClient.disconnect();
-  //     setTimeout(() => {
-  //       const users2 = wsServer.getUsers();
-  //       expect(Object.keys(users2).length).toBe(0);
-  //       done();
-  //     }, 100);
-  //   }, 50);
-  // });
+  it('checks if a user has disconnect', (done) => {
+    wsClient.emit('joinChat', username);
+    setTimeout(() => {
+      const users = wsServer.getUsers();
+      expect(Object.keys(users).length).toBe(1);
+      // Disconnect the sockext
+      wsClient.disconnect();
+      setTimeout(() => {
+        const users2 = wsServer.getUsers();
+        expect(Object.keys(users2).length).toBe(0);
+        done();
+      }, 100);
+    }, 50);
+  });
 });
