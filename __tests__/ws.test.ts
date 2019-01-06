@@ -60,13 +60,13 @@ describe('WebSocket server tests', () => {
     setTimeout(() => {
       const users = wsServer.getUsers();
       expect(Object.keys(users).length).toBe(1);
-      // Disconnect the socket
+      // Disconnect the sockext
       wsClient.disconnect();
       setTimeout(() => {
         const users2 = wsServer.getUsers();
         expect(Object.keys(users2).length).toBe(0);
         done();
-      }, 50);
+      }, 100);
     }, 50);
   });
 });
