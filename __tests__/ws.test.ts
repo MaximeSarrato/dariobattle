@@ -52,7 +52,7 @@ describe('WebSocket server tests', () => {
       const users = wsServer.getUsers();
       expect(Object.keys(users).length).toBe(1);
       done();
-    }, 1000);
+    }, 50);
   });
 
   it('checks if a user has disconnect', (done) => {
@@ -66,7 +66,7 @@ describe('WebSocket server tests', () => {
         const users2 = wsServer.getUsers();
         expect(Object.keys(users2).length).toBe(0);
         done();
-      }, 1000);
-    }, 1000);
+      }, 50);
+    }, 50);
   });
 });
