@@ -19,7 +19,11 @@ class UsersController implements Controller {
     this.router.get(`${this.path}/:id`, isAuthenticated, this.getUser);
     this.router.put(`${this.path}/:id`, isAuthenticated, this.updateUser);
     this.router.delete(`${this.path}/:id`, isAuthenticated, this.deleteUser);
-    this.router.post(`${this.path}/username`, isAuthenticated, this.addUsername);
+    this.router.post(
+      `${this.path}/username`,
+      isAuthenticated,
+      this.addUsername,
+    );
     this.router.post(`${this.path}/signup`, this.signUp);
     this.router.post(`${this.path}/login`, this.logIn);
   }
@@ -77,9 +81,14 @@ class UsersController implements Controller {
       user.username = username;
       user.password = hash;
 
-      user.save().then(() => {
-        res.send({ username });
-      });
+      user
+        .save()
+        .then(() => {
+          res.send({ username });
+        })
+        .catch((err) =>
+          logger.error(`Impossible to create the user ${username}` + err),
+        );
       // Create a local account
     } else {
       const existingUser = await User.findOne({ username });
