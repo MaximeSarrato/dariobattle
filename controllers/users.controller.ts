@@ -6,6 +6,7 @@ import Controller from '../interfaces/controller.interface';
 import { isAuthenticated } from '../middlewares/isAuthenticated';
 import User from '../models/User';
 import logger from '../services/logger';
+import * as mongoose from 'mongoose';
 
 class UsersController implements Controller {
   public path = '/users';
@@ -30,6 +31,11 @@ class UsersController implements Controller {
 
   private getUser = async (req: express.Request, res: express.Response) => {
     logger.info(`GET /users/${req.params.id}`);
+
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).send('The user id is not valid.');
+    }
+
     const user = await User.findById(req.params.id);
     if (!user) {
       return res.status(404).send('This user does not exist in our database.');
@@ -113,11 +119,13 @@ class UsersController implements Controller {
   }
 
   private logIn = async (req: express.Request, res: express.Response) => {
-    logger.info('POST /login');
-
     const { username, password } = req.body;
-    if (!username || !password) {
-      return res.status(403).send('Invalid form submission.');
+    logger.info(`POST /users/login for user ${username}`);
+
+    if (!username) {
+      return res.status(403).send('You must provide an username.');
+    } else if (!password) {
+      return res.status(403).send('You must provide a password.');
     }
 
     const user = await User.findOne({ username });
@@ -128,22 +136,20 @@ class UsersController implements Controller {
         .send('This username does not exist in our database.');
     }
 
-    bcrypt.compare(password, user.password).then((match) => {
-      if (!match) {
-        return res.status(403).send('Wrong password!');
-      }
-      const duration = moment.duration(3, 'days');
-      user.token = jwt.encode(
-        { uid: user._id, duration },
-        process.env.JWT_SECRET,
-      );
-      req.session.jwt = user.token;
-      user.save().then((data) => {
-        res
-          .header('X-Auth', user.token)
-          .send({ uid: user._id, username: user.username });
-      });
-    });
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
+      return res.status(403).send('Wrong password!');
+    }
+    const duration = moment.duration(3, 'days');
+    user.token = jwt.encode(
+      { uid: user._id, duration },
+      process.env.JWT_SECRET,
+    );
+    req.session.jwt = user.token;
+    await user.save();
+    return res
+      .header('X-Auth', user.token)
+      .send({ uid: user._id, username: user.username });
   }
 }
 
