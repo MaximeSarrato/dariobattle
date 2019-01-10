@@ -56,14 +56,16 @@ function loginAndGetToken(): Promise<string> {
     request(app)
       .post('/users/login')
       .send({ username, password })
-      .end((err, res) => {
-        if (err) {
-          return reject('Impossible to get token.' + err);
-        } else if (res.header['x-auth']) {
+      .then((res) => {
+        if (res.header['x-auth']) {
           return resolve(res.header['x-auth']);
+        } else {
+          return reject(
+            'Impossible to find token because header does not exist.',
+          );
         }
-        return reject('Impossible to get token.');
-      });
+      })
+      .catch((err) => reject('Impossible to get token.' + err));
   });
 }
 
@@ -93,14 +95,7 @@ describe('POST /users/signup', () => {
       .expect(200, done);
   });
   it('should return 403 on existing username', async (done) => {
-    const user = new User({
-      username,
-      password,
-      createdAt: Date.now(),
-    });
-
-    await user.save();
-
+    await createTemporaryUser();
     request(app)
       .post('/users/signup')
       .send({ username, password })
@@ -153,6 +148,7 @@ describe('POST /users/login', () => {
       .expect(403, done);
   });
 });
+
 describe('GET /users/:id', () => {
   it('should return 400 on invalid id', async (done) => {
     const invalidUserId = 'abc123';
@@ -207,6 +203,7 @@ describe('GET /users/:id', () => {
       });
   });
 });
+
 describe('POST /users/username', () => {
   it('should return 400 on missing username in body request', async (done) => {
     await createTemporaryUser();
@@ -254,6 +251,7 @@ describe('POST /users/username', () => {
       .expect(200, done);
   });
 });
+
 describe('DELETE /users/:id', () => {
   it('should return 200 on user deleted', async (done) => {
     const user = await createTemporaryUser();
@@ -271,6 +269,7 @@ describe('DELETE /users/:id', () => {
       .expect(200, done);
   });
 });
+
 describe('PUT /users/:id', () => {
   it('should return 200 on user updated', async (done) => {
     const user = await createTemporaryUser();
