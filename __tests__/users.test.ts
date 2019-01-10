@@ -5,7 +5,6 @@ import * as mongoose from 'mongoose';
 import UsersController from '../controllers/users.controller';
 import User from '../models/User';
 import { IUserDocument } from '../interfaces/IUserDocument';
-import { rejects } from 'assert';
 import logger from '../services/logger';
 
 const app = new App([new UsersController()]).app;
@@ -206,5 +205,86 @@ describe('GET /users/:id', () => {
         expect(res.body._id).toBe(mongoose.Types.ObjectId(user._id).toString());
         done();
       });
+  });
+});
+describe('POST /users/username', () => {
+  it('should return 400 on missing username in body request', async (done) => {
+    await createTemporaryUser();
+    let token;
+    try {
+      token = await loginAndGetToken();
+    } catch (e) {
+      return done(e);
+    }
+    expect(token).toBeTruthy();
+    request(app)
+      .post('/users/username')
+      .set('x-auth', token)
+      .send({})
+      .expect(400, done);
+  });
+  it('should return 409 on already taken username', async (done) => {
+    await createTemporaryUser();
+    let token;
+    try {
+      token = await loginAndGetToken();
+    } catch (e) {
+      return done(e);
+    }
+    expect(token).toBeTruthy();
+    request(app)
+      .post('/users/username')
+      .set('x-auth', token)
+      .send({ username })
+      .expect(409, done);
+  });
+  it('should return 200 on success', async (done) => {
+    await createTemporaryUser();
+    let token;
+    try {
+      token = await loginAndGetToken();
+    } catch (e) {
+      return done(e);
+    }
+    expect(token).toBeTruthy();
+    request(app)
+      .post('/users/username')
+      .set('x-auth', token)
+      .send({ username: 'dsqdq561gfds' })
+      .expect(200, done);
+  });
+});
+describe('DELETE /users/:id', () => {
+  it('should return 200 on user deleted', async (done) => {
+    const user = await createTemporaryUser();
+    const userId = mongoose.Types.ObjectId(user._id).toString();
+    let token;
+    try {
+      token = await loginAndGetToken();
+    } catch (e) {
+      return done(e);
+    }
+    expect(token).toBeTruthy();
+    request(app)
+      .delete(`/users/${userId}`)
+      .set('x-auth', token)
+      .expect(200, done);
+  });
+});
+describe('PUT /users/:id', () => {
+  it('should return 200 on user updated', async (done) => {
+    const user = await createTemporaryUser();
+    const userId = mongoose.Types.ObjectId(user._id).toString();
+    let token;
+    try {
+      token = await loginAndGetToken();
+    } catch (e) {
+      return done(e);
+    }
+    expect(token).toBeTruthy();
+    request(app)
+      .put(`/users/${userId}`)
+      .set('x-auth', token)
+      .expect(200, done);
   });
 });
