@@ -57,20 +57,14 @@ class UsersController implements Controller {
   private deleteUser = (req: express.Request, res: express.Response) => {
     logger.info(`DELETE /users/:${req.params.id}`);
     const user = res.locals.user;
-    user
-      .remove()
-      .then((deletedUser: IUserDocument) => {
-        logger.info(
-          `The user with id ${deletedUser._id} and username ${
-            deletedUser.username
-          } has been deleted.`,
-        );
-        res.sendStatus(200);
-      })
-      .catch((err) => {
-        logger.error(`Impossible to delete the user with id ${req.params.id}.`);
-        res.sendStatus(500);
-      });
+    user.remove().then((deletedUser: IUserDocument) => {
+      logger.info(
+        `The user with id ${deletedUser._id} and username ${
+          deletedUser.username
+        } has been deleted.`,
+      );
+      res.sendStatus(200);
+    });
   }
 
   private addUsername = async (req: express.Request, res: express.Response) => {

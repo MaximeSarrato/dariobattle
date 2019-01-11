@@ -6,10 +6,7 @@ const formatter = format.combine(
   format.align(),
   format.printf((info) => {
     const { timestamp, level, message, ...extra } = info;
-
-    return `${timestamp} [${level}]: ${message} ${
-      Object.keys(extra).length ? JSON.stringify(extra, null, 2) : ''
-    }`;
+    return `${timestamp} [${level}]: ${message}`;
   }),
 );
 

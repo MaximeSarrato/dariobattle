@@ -16,7 +16,6 @@ mongoose.connect(
 );
 
 if (process.env.NODE_ENV !== 'test') {
-  // Socket.IO
   const wsServer = new WebSocketServer(server);
   wsServer.listen();
 
@@ -25,16 +24,9 @@ if (process.env.NODE_ENV !== 'test') {
   });
 }
 
-/**
- * Shutdown the server when system detects SIGINT
- */
-process.on('SIGINT', () => {
-  server.close();
-  process.exit();
-});
-
 server.on('close', () => {
   logger.info('Server has been stopped.');
+  mongoose.disconnect();
 });
 
 export default server;
