@@ -1,4 +1,4 @@
-# [Dario Battle](https://dariobattle.herokuapp.com) &middot; [![Coverage Status](https://coveralls.io/repos/github/MaximeSarrato/dariobattle/badge.svg?branch=feature%2Fci)](https://coveralls.io/github/MaximeSarrato/dariobattle?branch=feature%2Fci) [![Build Status](https://travis-ci.org/MaximeSarrato/dariobattle.svg?branch=master)](https://travis-ci.org/MaximeSarrato/dariobattle)
+# [Dario Battle](https://dariobattle.herokuapp.com) &middot; [![Coverage Status](https://coveralls.io/repos/github/MaximeSarrato/dariobattle/badge.svg?branch=master)](https://coveralls.io/github/MaximeSarrato/dariobattle?branch=master) [![Build Status](https://travis-ci.org/MaximeSarrato/dariobattle.svg?branch=master)](https://travis-ci.org/MaximeSarrato/dariobattle)
 
 Dario Battle is a web application which allow to play to a battle mode like the one that was in the game Super Mario Bros 2.
 
