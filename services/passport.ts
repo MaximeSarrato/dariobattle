@@ -4,6 +4,7 @@ import * as jwt from 'jwt-simple';
 import * as moment from 'moment';
 import * as passportGoogle from 'passport-google-oauth';
 import User from '../models/User';
+import logger from './logger';
 
 const GoogleStrategy = passportGoogle.OAuth2Strategy;
 
@@ -13,47 +14,58 @@ passport.use(
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       callbackURL: '/auth/google/callback',
-      passReqToCallback: true
+      passReqToCallback: true,
     },
     async (req, accessToken, refreshToken, profile, done) => {
-      console.log('\n ---  Google Strategy --- \n');
-      // Link Google account
+      logger.info('Google OAuth Strategy');
+      /**
+       * Link Google account to local account
+       */
       if (req.session.jwt) {
         const token = req.session.jwt;
         const decodedToken = jwt.decode(token, process.env.JWT_SECRET);
         const user = await User.findById(decodedToken.uid);
         if (user) {
+          logger.info(
+            `Linking Google Account for existing user with id ${user._id}`,
+          );
           user.googleID = profile.id;
           await user.save();
           return done(null, user);
         }
-        // Connect with Google
+        /**
+         * Connection and Signup with Google account
+         */
       } else {
-        console.log('Connect with Google');
-        const user = await User.findOne({ googleID: profile.id });
+        logger.info('Login using Google OAuth');
+        let user = await User.findOne({ googleID: profile.id });
         if (user) {
           const duration = moment.duration(3, 'days');
-          user.token = jwt.encode({ uid: user._id, duration }, process.env.JWT_SECRET);
+          user.token = jwt.encode(
+            { uid: user._id, duration },
+            process.env.JWT_SECRET,
+          );
           req.session.jwt = user.token;
           await user.save();
           return done(null, user);
         } else {
-          // Just create an account with Google and when he is connected
-          // ask him to choose an username
+          /**
+           * Create an account from Google Account
+           */
           const id = new mongoose.Types.ObjectId();
+          logger.info(`Creating new user with id ${id}`);
           const duration = moment.duration(3, 'days');
-          const user = new User({
+          user = new User({
             _id: id,
             googleID: profile.id,
             token: jwt.encode({ uid: id, duration }, process.env.JWT_SECRET),
-            createdAt: Date.now()
+            createdAt: Date.now(),
           });
-          console.log('user: ', user);
           req.session.jwt = user.token;
           await user.save();
           return done(null, user);
         }
       }
-    }
-  )
+    },
+  ),
 );

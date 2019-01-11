@@ -1,9 +1,9 @@
-import * as express from 'express';
 import * as bodyParser from 'body-parser';
 import * as cors from 'cors';
+import * as dotenv from 'dotenv';
+import * as express from 'express';
 import * as session from 'express-session';
 import * as path from 'path';
-import * as dotenv from 'dotenv';
 
 /**
  * Load environment variables
@@ -34,8 +34,8 @@ class App {
       cors({
         exposedHeaders: ['x-auth'],
         origin: ['http://localhost:9000', 'http://localhost'],
-        credentials: true
-      })
+        credentials: true,
+      }),
     );
     this.app.use(
       session({
@@ -43,9 +43,9 @@ class App {
         resave: true,
         saveUninitialized: true,
         cookie: {
-          httpOnly: false
-        }
-      })
+          httpOnly: false,
+        },
+      }),
     );
   }
 

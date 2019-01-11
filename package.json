@@ -13,14 +13,16 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "dev": "ts-node server.ts",
+    "client": "cd client && yarn run dev-server",
+    "server": "ts-node server.ts",
+    "dev": "concurrently --kill-others-on-fail \"yarn run server\" \"yarn run client\"",
     "start": "nodemon ./dist/server.js",
     "debug": "DEBUG=express-session nodemon index.js",
     "build": "tsc",
-    "test": "jest",
-    "test-coverage": "jest --coverage",
-    "coveralls": "jest --coverage && cat ./coverage/lcov.info | coveralls",
-    "heroku-postbuild": "yarn run build && cd client && yarn install --production=false && yarn run build"
+    "test": "jest --detectOpenHandles --forceExit --runInBand",
+    "test-coverage": "yarn run test --coverage",
+    "coveralls": "yarn run test --coverage && cat ./coverage/lcov.info | coveralls",
+    "heroku-postbuild": "cd client && yarn install --production=false && yarn run build"
   },
   "dependencies": {
     "bcrypt": "^2.0.1",
@@ -29,11 +31,12 @@
     "express": "^4.16.3",
     "express-session": "^1.15.6",
     "jwt-simple": "^0.5.1",
-    "moment": "^2.22.1",
+    "moment": "^2.23.0",
     "mongoose": "^5.0.16",
     "passport": "^0.4.0",
     "passport-google-oauth": "^1.0.0",
-    "socket.io": "^2.1.1"
+    "socket.io": "^2.1.1",
+    "winston": "^3.1.0"
   },
   "devDependencies": {
     "@types/body-parser": "^1.17.0",
@@ -48,7 +51,9 @@
     "@types/passport-google-oauth": "^1.0.39",
     "@types/passport-google-oauth2": "^0.1.2",
     "@types/sinon": "^7.0.2",
+    "@types/socket.io-client": "^1.4.32",
     "@types/supertest": "^2.0.7",
+    "concurrently": "^4.1.0",
     "coveralls": "^3.0.2",
     "eslint": "^4.19.1",
     "eslint-config-airbnb-base": "^12.1.0",
@@ -57,9 +62,11 @@
     "mockingoose": "^2.12.0",
     "nodemon": "^1.17.3",
     "sinon": "^7.2.2",
+    "socket.io-client": "^2.2.0",
     "supertest": "^3.3.0",
     "ts-jest": "^23.10.5",
     "ts-node": "^7.0.1",
+    "tslint": "^5.12.0",
     "typescript": "^3.2.2"
   }
 }

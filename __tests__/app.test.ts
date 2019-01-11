@@ -5,13 +5,13 @@ import Controller from '../interfaces/controller.interface';
 
 const controller: Controller = {
   path: '/randomPath',
-  router: Router()
+  router: Router(),
 };
 
 const app = new App([controller]).app;
 
 describe('GET /random-url', () => {
-  it('should return 200', done => {
+  it('should return 200', (done) => {
     request(app)
       .get('/reset')
       .expect(200, done);

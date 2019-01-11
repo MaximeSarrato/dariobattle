@@ -6,3 +6,5 @@ yarn-error.log
 /dist
 # Jest code coverage 
 /coverage
+# Logs
+*.log
