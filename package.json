@@ -22,7 +22,7 @@
     "test": "jest --detectOpenHandles --forceExit --runInBand",
     "test-coverage": "yarn run test --coverage",
     "coveralls": "yarn run test --coverage && cat ./coverage/lcov.info | coveralls",
-    "heroku-postbuild": "cd client && yarn install --production=false && yarn run build"
+    "heroku-postbuild": "yarn run build && cd client && yarn install && yarn run build"
   },
   "dependencies": {
     "bcrypt": "^2.0.1",
