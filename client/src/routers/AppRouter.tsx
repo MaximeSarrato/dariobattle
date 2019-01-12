@@ -1,7 +1,7 @@
-import React from 'react';
+import * as React from 'react';
 import { Router, Switch, Link } from 'react-router-dom';
 import createHistory from 'history/createBrowserHistory';
-import Dashboard from '../components/Dashboard';
+import DashboardContainer from '../containers/DashboardContainer';
 import Leaderboard from '../components/Leaderboard';
 import LoginPage from '../components/LoginPage';
 import SignupPage from '../components/SignupPage';
@@ -13,7 +13,7 @@ import PrivateRoute from './PrivateRoute';
 const AppRouter = () => (
   <Router history={createHistory()}>
     <Switch>
-      <PrivateRoute exact path="/dashboard" component={Dashboard} />
+      <PrivateRoute exact path="/dashboard" component={DashboardContainer} />
       <PrivateRoute exact path="/leaderboard" component={Leaderboard} />
       <PrivateRoute exact path="/profile" component={Profile} />
       <PrivateRoute exact path="/play" component={Play} />

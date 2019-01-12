@@ -1,0 +1,20 @@
+{
+  "extends": ["tslint:latest", "tslint-react", "tslint-config-prettier"],
+  "rules": {
+    "member-access": [true, "no-public"],
+    "ordered-imports": false,
+    "no-implicit-dependencies": false,
+    "interface-name": false,
+    "object-literal-sort-keys": false,
+    "jsx-boolean-value": false,
+    "no-submodule-imports": false,
+    "quotemark": [true, "single", "jsx-double"],
+    "max-line-length": [
+      true,
+      {
+        "limit": 120
+      }
+    ],
+    "jsx-no-lambda": false
+  }
+}

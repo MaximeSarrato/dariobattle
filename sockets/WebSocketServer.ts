@@ -2,7 +2,7 @@ import { Server } from 'http';
 import * as socketIO from 'socket.io';
 import logger from '../services/logger';
 
-interface Users {
+export interface Users {
   [key: string]: {
     socketID: string;
   };
