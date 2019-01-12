@@ -8,12 +8,17 @@ import logger from './logger';
 
 const GoogleStrategy = passportGoogle.OAuth2Strategy;
 
+const callbackURL =
+  process.env.NODE_ENV === 'production'
+    ? 'https://dariobattle.herokuapp.com/auth/google/callback'
+    : '/auth/google/callback';
+
 passport.use(
   new GoogleStrategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: '/auth/google/callback',
+      callbackURL,
       passReqToCallback: true,
     },
     async (req, accessToken, refreshToken, profile, done) => {
