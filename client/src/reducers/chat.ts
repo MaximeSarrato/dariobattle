@@ -1,16 +1,16 @@
-import { ChatActionTypes } from "../types";
+import { ChatActionTypes } from '../types';
 import * as chatActions from '../actions/chat';
-import { ActionType } from "typesafe-actions";
+import { ActionType } from 'typesafe-actions';
 
-export type ChatState = {
-  readonly users: string[]
+export interface IChatState {
+  readonly users: string[];
 }
 
-const initialState: ChatState = {
+const initialState: IChatState = {
   users: []
-}
+};
 
-type ChatAction = ActionType<typeof chatActions>
+type ChatAction = ActionType<typeof chatActions>;
 
 export default (state = initialState, action: ChatAction) => {
   switch (action.type) {

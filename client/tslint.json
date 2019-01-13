@@ -4,9 +4,9 @@
     "member-access": [true, "no-public"],
     "ordered-imports": false,
     "no-implicit-dependencies": false,
-    "interface-name": false,
     "object-literal-sort-keys": false,
     "jsx-boolean-value": false,
+    "arrow-parens": true,
     "no-submodule-imports": false,
     "quotemark": [true, "single", "jsx-double"],
     "max-line-length": [

@@ -1,8 +1,8 @@
-import { AuthState } from "../reducers/auth";
-import { ChatState } from "../reducers/chat";
+import { IAuthState } from '../reducers/auth';
+import { IChatState } from '../reducers/chat';
 
-export interface RootReducer {
-  auth: AuthState;
+export interface IRootReducer {
+  auth: IAuthState;
   form: any;
-  chat: ChatState;
+  chat: IChatState;
 }

@@ -2,12 +2,12 @@ import * as authActions from '../actions/auth';
 import { ActionType } from 'typesafe-actions';
 import { AuthActionTypes } from '../types';
 
-export type AuthState = {
+export interface IAuthState {
   readonly uid: string;
   readonly username: string;
 }
 
-const initialState: AuthState = {
+const initialState: IAuthState = {
   uid: '',
   username: ''
 }

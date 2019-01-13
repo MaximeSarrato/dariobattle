@@ -1,13 +1,13 @@
-import Dashboard from '../components/Dashboard'
+import AccountDetails from '../components/AccountDetails';
 import { connect } from 'react-redux';
-import { joinChat } from '../actions/chat';
 import { IAuthState } from '../reducers/auth';
 
 const mapStateToProps = ({ auth }: { auth: IAuthState }) => ({
-  username: auth.username
+  username: auth.username,
+  uid: auth.uid
 });
 
 export default connect(
   mapStateToProps,
-  { joinChat }
-)(Dashboard);
+  null
+)(AccountDetails);
