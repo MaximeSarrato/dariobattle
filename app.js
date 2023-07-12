@@ -10,6 +10,7 @@ const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const { Client } = require('pg');
 
+// Environment variables
 const keys = require('./config/keys');
 
 const main = async () => {
