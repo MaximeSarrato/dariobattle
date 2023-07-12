@@ -16,7 +16,7 @@
     "node": ">=0.10"
   },
   "dependencies": {
-    "bcrypt": "^1.0.2",
+    "bcrypt": "^5.1.0",
     "body-parser": "^1.16",
     "cookie-parser": "^1.4",
     "cookie-session": "^1.1",
@@ -24,8 +24,8 @@
     "csurf": "^1.9",
     "express": "^4.14",
     "express-session": "^1.15",
-    "mysql": "^2.13.0",
-    "nodemon": "^1.11",
+    "nodemon": "^1.19.4",
+    "pg": "^8.11.1",
     "serve-favicon": "^2.3",
     "serve-static": "^1.11",
     "socket.io": "^1.7.3",
