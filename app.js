@@ -58,6 +58,7 @@ const main = async () => {
    ****************************************/
   app.all('/', async function (req, res) {
     if (req.method == 'GET') {
+      console.log('GET /');
       // Si pas de session on va vers la page de connexion
       if (!req.session.login) {
         res.render('connexion.twig');
@@ -86,6 +87,7 @@ const main = async () => {
         }
       }
     } else if (req.method == 'POST') {
+      console.log('POST /');
       // Recherche si le user existe dans la BD
       try {
         const existingUserQueryResult = await postgresClient.query(
