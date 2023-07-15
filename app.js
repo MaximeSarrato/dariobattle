@@ -22,6 +22,7 @@ const main = async () => {
     await postgresClient.connect();
   } catch (error) {
     console.error('Error connecting to postgres', error);
+    process.exit(1);
   }
 
   const port = process.env.PORT || 3000;
@@ -292,7 +293,9 @@ const main = async () => {
         nom: req.session.login,
         joueursDispo: joueursDispo,
       });
-    } else res.redirect('/');
+    } else {
+      res.redirect('/');
+    }
   });
 
   /****************************************
@@ -311,8 +314,9 @@ const main = async () => {
           }
         }
       });
-      res.redirect('/');
-    } else res.redirect('/');
+    }
+
+    res.redirect('/');
   });
 
   /*********************
