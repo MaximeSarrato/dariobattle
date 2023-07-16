@@ -1,4 +1,5 @@
 node_modules
 dev.js
 docker-compose.prod.yml
-/nginx-conf/*
+nginx.conf
+*.pem
