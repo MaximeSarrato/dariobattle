@@ -8,18 +8,28 @@ const session = require('express-session');
 const bodyParser = require('body-parser');
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
-const { Client } = require('pg');
+const { Pool, Client } = require('pg');
 
 // Environment variables
 const keys = require('./config/keys');
 
 const main = async () => {
-  const postgresClient = new Client({
+  const pool = new Pool({
     connectionString: keys.DATABASE_URL,
   });
 
+  // the pool will emit an error on behalf of any idle clients
+  // it contains if a backend error or network partition happens
+  pool.on('error', (err, client) => {
+    console.error('Unexpected error on idle client', err);
+    process.exit(-1);
+  });
+
+  // Try to connect to postgres and exit if it fails in order to let docker-compose restart the container
   try {
-    await postgresClient.connect();
+    const postgresClient = await pool.connect();
+    console.log('Connected to postgres');
+    postgresClient.release();
   } catch (error) {
     console.error('Error connecting to postgres', error);
     process.exit(1);
@@ -74,7 +84,7 @@ const main = async () => {
         }
 
         try {
-          const users = await postgresClient.query(
+          const users = await pool.query(
             'SELECT login, games, kills, deaths, created_at FROM users'
           );
 
@@ -91,7 +101,7 @@ const main = async () => {
       console.log('POST /');
       // Recherche si le user existe dans la BD
       try {
-        const existingUserQueryResult = await postgresClient.query(
+        const existingUserQueryResult = await pool.query(
           'SELECT * FROM users WHERE login = $1',
           [req.body.login]
         );
@@ -174,10 +184,11 @@ const main = async () => {
           // Insertion du login, hash du password et de la date de l'inscription
           // du compte dans la base de données
           try {
-            await postgresClient.query(
-              'INSERT INTO users VALUES ($1, $2, 0, 0, 0, $3)',
-              [req.body.login, hash, currentDate]
-            );
+            await pool.query('INSERT INTO users VALUES ($1, $2, 0, 0, 0, $3)', [
+              req.body.login,
+              hash,
+              currentDate,
+            ]);
 
             res.redirect('/userlist');
           } catch (error) {
@@ -224,7 +235,7 @@ const main = async () => {
       // Tri par nombre de kills et on envoie tous les joueurs ainsi que ceux qui sont co dans la page
 
       try {
-        const usersOrderedByNumberOfKills = await postgresClient.query(
+        const usersOrderedByNumberOfKills = await pool.query(
           'SELECT * FROM users ORDER BY kills DESC'
         );
 
@@ -543,40 +554,52 @@ room is the name of a room */
     });
 
     // Invitation à jouer envoyée par sender et acceptée par le receiver
-    socket.on('acceptInvitation', function (sender, lsid) {
-      var receiver = getPlayerByLsid(lsid);
-      console.log('Invitation par ' + sender);
-      /* On vérifie que le sender et le receiver existent bien et sont bien connectés
+    socket.on(
+      'acceptInvitation',
+      async function (playerWhoSentInvitation, lsid) {
+        var invitedPlayer = getPlayerByLsid(lsid);
+        console.log('Invitation par ' + playerWhoSentInvitation);
+        /* On vérifie que le sender et le receiver existent bien et sont bien connectés
         et qu'ils sont bien dans l'état "INGAME" */
-      if (isUserConnected(sender) && isUserConnected(receiver)) {
-        // Notifier le joueur que son invitation a été acceptée
-        var message = 'Le joueur ' + receiver + ' a accepte votre invitation !';
-        socket.to(getId(sender)).emit('invHasBeenAccepted', message);
+        if (
+          isUserConnected(playerWhoSentInvitation) &&
+          isUserConnected(invitedPlayer)
+        ) {
+          // Notifier le joueur que son invitation a été acceptée
+          var message =
+            'Le joueur ' + invitedPlayer + ' a accepte votre invitation !';
+          socket
+            .to(getId(playerWhoSentInvitation))
+            .emit('invHasBeenAccepted', message);
 
-        // On change les statuts des joueurs
-        usersConnected[sender].statut = 'INGAME';
-        usersConnected[receiver].statut = 'INGAME';
-        usersConnected[sender].adversaire = receiver;
-        usersConnected[receiver].adversaire = sender;
+          // On change les statuts des joueurs
+          usersConnected[playerWhoSentInvitation].statut = 'INGAME';
+          usersConnected[invitedPlayer].statut = 'INGAME';
+          usersConnected[playerWhoSentInvitation].adversaire = invitedPlayer;
+          usersConnected[invitedPlayer].adversaire = playerWhoSentInvitation;
 
-        /* On incrémente le nombre de partie des deux joueurs */
-
-        postgresClient.query(
-          'UPDATE users SET games = games+1 WHERE LOGIN = ?',
-          [sender],
-          function (err, result) {
-            if (err) console.log(err);
+          /* On incrémente le nombre de partie des deux joueurs */
+          const postgresClient = await pool.connect();
+          try {
+            await postgresClient.query('BEGIN');
+            await postgresClient.query(
+              'UPDATE users SET games = games + 1 WHERE LOGIN = $1',
+              [playerWhoSentInvitation]
+            );
+            await postgresClient.query(
+              'UPDATE users SET games = games + 1 WHERE LOGIN = $1',
+              [invitedPlayer]
+            );
+            await postgresClient.query('COMMIT');
+          } catch (err) {
+            await postgresClient.query('ROLLBACK');
+            throw err;
+          } finally {
+            postgresClient.release();
           }
-        );
-        postgresClient.query(
-          'UPDATE users SET games = games+1 WHERE LOGIN = ?',
-          [receiver],
-          function (err, result) {
-            if (err) console.log(err);
-          }
-        );
+        }
       }
-    });
+    );
 
     // Invitation à jouer refusée
     socket.on('declineInvitation', function (sender, receiver) {
@@ -648,8 +671,10 @@ room is the name of a room */
           }
         }
         /* On incrémente le nombre de kills et de morts des joueurs respectifs */
-        await postgresClient.query('BEGIN');
+        const postgresClient = await pool.connect();
+
         try {
+          await postgresClient.query('BEGIN');
           await postgresClient.query(
             'UPDATE users SET kills = kills + 1 WHERE login = $1',
             [killerName]
@@ -662,6 +687,8 @@ room is the name of a room */
         } catch (err) {
           await postgresClient.query('ROLLBACK');
           throw err;
+        } finally {
+          postgresClient.release();
         }
       } else {
         console.log('This player does not exists');
